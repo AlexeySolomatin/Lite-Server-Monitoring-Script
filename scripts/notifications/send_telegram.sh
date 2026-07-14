@@ -1,6 +1,6 @@
 #!/bin/bash
-TOKEN="8955383624:AAH27c-j5gUobyMgJ4swofJTrFizMvDkIAY"
-CHAT_ID="57731894"
+TOKEN=""
+CHAT_ID=""
 HOST=$(hostname)
 MESSAGE="⚠️ [$HOST]: $1"
 
