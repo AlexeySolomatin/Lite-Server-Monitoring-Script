@@ -1,95 +1,105 @@
-# Lite-Server-Monitoring-Script
-Lightweight modular monitoring toolkit for Ubuntu and Debian servers with Telegram, Email, SMART, RAID, UPS and Docker monitoring.
-# Lite Server Monitoring Script
+![Version](https://img.shields.io/badge/version-0.1.0--alpha-blue)
+![License](https://img.shields.io/badge/license-MIT-green)
+![Platform](https://img.shields.io/badge/platform-Ubuntu%20%7C%20Debian-orange)
+![Shell](https://img.shields.io/badge/bash-5.x-lightgrey)
+# Lite Server Monitor (LSM)
 
-> Lightweight, modular and production-ready monitoring toolkit for Ubuntu and Debian servers.
+> Lightweight, modular monitoring and security toolkit for Ubuntu and Debian servers.
 
-Lite Server Monitoring Script is an open-source collection of Bash scripts designed to monitor the health of Linux servers without requiring Docker, databases, web interfaces, or heavyweight monitoring platforms.
+**Lite Server Monitor (LSM)** is an open-source project designed to monitor Linux servers without requiring Docker, databases, web interfaces, or heavy monitoring platforms.
 
-The project focuses on simplicity, reliability and ease of deployment while providing essential monitoring features such as SMART, RAID, disk usage, system resources, UPS status and daily health reports.
+The project focuses on simplicity, low resource usage, and reliable unattended operation.
 
----
-
-## Why this project?
-
-Many monitoring solutions are either:
-
-- too complex
-- require multiple services
-- need databases
-- require Docker or Kubernetes
-- consume significant system resources
-
-Lite Server Monitoring Script was created for administrators who simply need reliable monitoring with minimal configuration.
-
-The project is designed for:
-
-- Home Servers
-- NAS
-- Print Servers
-- CCTV / NVR Servers
-- Virtual Machines
-- Small Business Infrastructure
-- Dedicated Linux Servers
+Once installed, LSM continuously monitors your server, sends notifications when issues occur, and generates a daily health report.
 
 ---
 
-## Features
+# Features
 
-### Storage Monitoring
+## System Monitoring
 
+- Disk space monitoring
 - SMART health monitoring
-- RAID status monitoring
-- Disk usage monitoring
-- Recovery notifications
-- Alert suppression using state files
+- RAID monitoring
+- CPU usage monitoring
+- Memory usage monitoring
+- CPU temperature monitoring
+- UPS monitoring (APC / apcupsd)
+- Daily server health report
 
-### System Monitoring
+---
 
-- CPU usage
-- Memory usage
-- System Load
-- Temperature monitoring
+## Security
 
-### UPS Monitoring
+- SSH login monitoring
+- Successful login statistics
+- Failed login detection
+- Fail2Ban integration
+- Banned IP statistics
+- Daily security summary
 
-- APC UPS support (apcupsd)
-- Battery events
-- Power loss notifications
-- Safe shutdown notifications
+---
 
-### Notifications
+## Notifications
+
+Supported notification methods:
 
 - Telegram
-- Email (SMTP)
-- Daily Health Report
+- Email (SMTP / msmtp)
 
-### Reliability
-
-- Lock protection (flock)
-- State files
-- Recovery detection
-- Duplicate alert protection
-- Safe repeated execution
+All notifications are handled by a unified notification module, providing consistent formatting and simplified maintenance.
 
 ---
 
-## Project Philosophy
+# Why Lite Server Monitor?
 
-The project follows several simple principles:
+Unlike enterprise monitoring platforms, Lite Server Monitor does **not** require:
 
-- Lightweight
-- Modular
-- No Docker required
-- No database required
-- No web interface required
-- Easy installation
-- Easy removal
-- Easy maintenance
+- Docker
+- Kubernetes
+- PostgreSQL
+- MySQL
+- Redis
+- Web UI
+- Monitoring agents
+- Complex initial configuration
+
+The project follows a simple philosophy:
+
+> **Install → Configure → Forget.**
+
+After installation, everything runs automatically using **systemd timers**.
 
 ---
 
-## Supported Operating Systems
+# Perfect For
+
+Lite Server Monitor is ideal for:
+
+- Home servers
+- NAS devices
+- Print servers
+- Video surveillance servers
+- Virtual machines
+- Small office servers
+- Dedicated Linux servers
+
+---
+
+# What This Project Is NOT
+
+Lite Server Monitor is **not** intended to replace:
+
+- Zabbix
+- Prometheus
+- Grafana
+- Netdata
+
+It is designed for reliable monitoring of one or several Linux servers without deploying a complete enterprise monitoring infrastructure.
+
+---
+
+# Supported Operating Systems
 
 Currently supported:
 
@@ -101,103 +111,155 @@ Additional distributions may be supported in future releases.
 
 ---
 
-## Planned Monitoring Modules
+# Architecture
 
-| Module | Status |
-|---------|--------|
-| Disk Space | ✅ |
-| SMART | ✅ |
-| RAID | ✅ |
-| CPU / RAM | ✅ |
-| Temperature | ✅ |
-| Daily Health Report | ✅ |
-| Telegram Notifications | ✅ |
-| Email Notifications | ✅ |
-| UPS Monitoring | 🚧 |
-| Docker Monitoring | 🚧 |
+Lite Server Monitor is built using a modular architecture.
+
+Each module performs a single task and can be installed or removed independently.
+
+Core components include:
+
+- `lsm` command-line interface
+- Modular installer
+- Shared library
+- Independent monitoring modules
+- Unified notification system
+- systemd services and timers
 
 ---
 
-## Installation
+# Modules
 
-Installation will be performed using a single command.
+## Monitoring
+
+- Disk Monitor
+- SMART Monitor
+- RAID Monitor
+- System Monitor
+- Temperature Monitor
+- UPS Monitor
+- Daily Health Report
+
+## Security
+
+- Login Monitor
+- Fail2Ban Monitor
+
+## Notifications
+
+- Telegram
+- Email
+
+---
+
+# Installation
+
+After the first stable release, installation will require only a single command:
 
 ```bash
-bash <(curl -fsSL https://raw.githubusercontent.com/<username>/Lite-Server-Monitoring-Script/main/bootstrap.sh)
+bash <(curl -fsSL https://raw.githubusercontent.com/<username>/Lite-Server-Monitor/main/bootstrap.sh)
 ```
 
-The installer will:
+The installation wizard will guide you through:
 
-- check system requirements
-- install dependencies
-- copy monitoring scripts
-- configure notifications
-- configure selected modules
-- verify installation
+- selecting monitoring modules;
+- configuring Telegram notifications;
+- configuring Email notifications;
+- choosing predefined configuration templates;
+- or performing manual configuration.
 
 ---
 
-## Project Structure
+# Project Structure
 
-```
+```text
+Lite-Server-Monitor/
 
-Lite-Server-Monitoring-Script/
-
-├── install.sh
-├── uninstall.sh
-├── update.sh
 ├── bootstrap.sh
 │
-├── scripts/
+├── installer/
+│   ├── install.sh
+│   ├── update.sh
+│   └── uninstall.sh
+│
+├── bin/
+│   └── lsm
+│
 ├── lib/
+│
+├── scripts/
+│   ├── monitoring/
+│   ├── security/
+│   └── notifications/
+│
 ├── templates/
-├── systemd/
-├── apcupsd/
 │
 ├── docs/
+│
 └── tests/
-
 ```
 
 ---
 
-## Documentation
+# Installation Layout
 
-Project documentation is available inside the **docs** directory.
+The following directories are used after installation.
 
-- Project Specification
-- Design Principles
+| Directory | Purpose |
+|------------|----------|
+| `/opt/lsm` | Application files |
+| `/etc/lsm` | Configuration files |
+| `/var/lib/lsm` | State files |
+| `/var/log/lsm` | Log files |
+| `/run/lsm` | Runtime lock files |
+| `/usr/local/bin/lsm` | Command-line interface |
 
-Russian documentation is also included.
+For a complete description, see **INSTALLATION_LAYOUT.md**.
 
 ---
 
-## Development Status
+# Command Line Interface
+
+After installation, all operations are performed through a single command:
+
+```bash
+lsm install
+lsm update
+lsm uninstall
+lsm doctor
+lsm status
+lsm report
+lsm version
+```
+
+---
+
+# Documentation
+
+The **docs/** directory contains:
+
+- PROJECT_SPECIFICATION
+- DESIGN_PRINCIPLES
+- INSTALLATION_LAYOUT
+
+Documentation is available in both English and Russian.
+
+---
+
+# License
+
+This project is released under the **MIT License**.
+
+---
+
+# Project Status
 
 Current version:
 
-```
-
+```text
 0.1.0-alpha
-
 ```
 
 The project is under active development.
 
-Interfaces and installation process may change before the first stable release.
-
----
-
-## Contributing
-
-Bug reports, ideas and pull requests are welcome.
-
-Please open an Issue before submitting major changes.
-
----
-
-## License
-
-Released under the MIT License.
-
-See LICENSE for details.
+Breaking changes may occur before the first stable **1.0** release.
