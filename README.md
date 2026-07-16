@@ -1,11 +1,27 @@
-![Version](https://img.shields.io/badge/version-0.1.0--alpha-blue)
-![License](https://img.shields.io/badge/license-MIT-green)
-![Platform](https://img.shields.io/badge/platform-Ubuntu%20%7C%20Debian-orange)
-![Shell](https://img.shields.io/badge/bash-5.x-lightgrey)
+<div align="center">
+  <!-- Вставьте ссылку на ваш логотип в тег src ниже -->
+  <img src="https://raw.github.com/AlexeySolomatin/Lite-Server-Monitor/LOGOo.png" alt="Lite Server Monitor Logo" width="140" height="140">
 
-# Lite Server Monitor (LSM)
+  # Lite Server Monitor (LSM)
 
-> Lightweight, modular monitoring and security toolkit for Ubuntu and Debian servers.
+  _Lightweight, modular monitoring and security toolkit for Ubuntu and Debian servers._
+
+  <p align="center">
+    <a href="https://github.com<your-github-username>/Lite-Server-Monitor/releases"><img src="https://shields.io" alt="Version"></a>
+    <a href="https://github.com<your-github-username>/Lite-Server-Monitor/blob/main/LICENSE"><img src="https://shields.io" alt="License"></a>
+    <img src="https://shields.io" alt="Platform">
+    <img src="https://shields.io" alt="Shell">
+  </p>
+
+  <h4>
+    <a href="#features">Features</a> | 
+    <a href="#why-lite-server-monitor">Why LSM?</a> | 
+    <a href="#installation">Installation</a> | 
+    <a href="#documentation">Documentation</a>
+  </h4>
+</div>
+
+---
 
 **Lite Server Monitor (LSM)** is an open-source project designed to monitor Linux servers without requiring Docker, databases, web interfaces, or heavy monitoring platforms.
 
