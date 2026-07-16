@@ -1,4 +1,4 @@
-<img src="LOGO.png" alt="Lite Server Monitor Logo" width="180" height="180" align="left" style="margin-right: 20px;">
+<img src="LOGO.png" alt="Lite Server Monitor Logo" width="140" height="140" align="left" style="margin-right: 20px;">
 
 # Lite Server Monitor (LSM)
 
