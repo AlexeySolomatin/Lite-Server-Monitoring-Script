@@ -1,7 +1,6 @@
 <div align="center">
   <!-- Вставьте ссылку на ваш логотип в тег src ниже -->
-  <img src="https://github.com/AlexeySolomatin/Lite-Server-Monitor/LOGOo.png" alt="Lite Server Monitor Logo" width="140" height="140">
-
+  <img src="LOGO.png" alt="Lite Server Monitor Logo" width="140"
   # Lite Server Monitor (LSM)
 
   _Lightweight, modular monitoring and security toolkit for Ubuntu and Debian servers._
