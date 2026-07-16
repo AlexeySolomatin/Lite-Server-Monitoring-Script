@@ -7,10 +7,10 @@
   _Lightweight, modular monitoring and security toolkit for Ubuntu and Debian servers._
 
   <p align="center">
-    <a ![Version](https://img.shields.io/badge/version-0.1.0--alpha-blue)></a>
-    <a href="https://github.com<your-github-username>/Lite-Server-Monitor/blob/main/LICENSE"><img src="https://shields.io" alt="License"></a>
-    <img src="https://shields.io" alt="Platform">
-    <img src="https://shields.io" alt="Shell">
+    ![Version](https://img.shields.io/badge/version-0.1.0--alpha-blue)
+![License](https://img.shields.io/badge/license-MIT-green)
+![Platform](https://img.shields.io/badge/platform-Ubuntu%20%7C%20Debian-orange)
+![Shell](https://img.shields.io/badge/bash-5.x-lightgrey)
   </p>
 
   <h4>
