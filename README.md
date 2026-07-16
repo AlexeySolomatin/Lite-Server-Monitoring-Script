@@ -13,7 +13,7 @@
 <table>
   <tr>
     <td width="160" valign="top">
-      <img src="docs/images/lsm-logo.png" alt="Lite Server Monitor Logo" width="140" height="140">
+      <img src="LOGO.png" alt="Lite Server Monitor Logo" width="140" height="140">
     </td>
     <td valign="top">
 
