@@ -10,6 +10,22 @@
 ![Shell](https://img.shields.io/badge/bash-5.x-lightgrey)
 <br clear="left"/>
 
+<table>
+  <tr>
+    <td>
+      <img src="LOGO.png" alt="Lite Server Monitor Logo" width="140" height="140">
+    </td>
+    <td>
+      <h1>Lite Server Monitor (LSM)</h1>
+      <p><i>Lightweight, modular monitoring and security toolkit for Ubuntu and Debian servers.</i></p>
+      <img src="https://shields.io" alt="Version">
+      <img src="https://shields.io" alt="License">
+      <img src="https://shields.io" alt="Platform">
+      <img src="https://shields.io" alt="Shell">
+    </td>
+  </tr>
+</table>
+
 ---
 
 **Lite Server Monitor (LSM)** is an open-source project designed to monitor Linux servers without requiring Docker, databases, web interfaces, or heavy monitoring platforms.
