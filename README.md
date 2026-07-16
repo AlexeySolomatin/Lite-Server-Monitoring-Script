@@ -32,6 +32,9 @@
       <img src="LOGO.png" alt="Lite Server Monitor Logo" width="140" height="140">
     </td>
     <td valign="top">
+    </table>
+
+---
 
 # Lite Server Monitor (LSM)
 
