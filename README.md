@@ -12,29 +12,26 @@
 
 <table>
   <tr>
-    <td>
-      <img src="LOGO.png" alt="Lite Server Monitor Logo" width="140" height="140">
+    <td width="160" valign="top">
+      <img src="docs/images/lsm-logo.png" alt="Lite Server Monitor Logo" width="140" height="140">
     </td>
-    <td>
-      <h1>Lite Server Monitor (LSM)</h1>
-      <p><i>Lightweight, modular monitoring and security toolkit for Ubuntu and Debian servers.</i></p>
-      <img src="https://shields.io" alt="Version">
-      <img src="https://shields.io" alt="License">
-      <img src="https://shields.io" alt="Platform">
-      <img src="https://shields.io" alt="Shell">
+    <td valign="top">
+
+# Lite Server Monitor (LSM)
+
+> Lightweight, modular monitoring and security toolkit for Ubuntu and Debian servers.
+
+![Version](https://img.shields.io/badge/version-0.1.0--alpha-blue)
+![License](https://img.shields.io/badge/license-MIT-green)
+![Platform](https://img.shields.io/badge/platform-Ubuntu%20%7C%20Debian-orange)
+![Shell](https://img.shields.io/badge/bash-5.x-lightgrey)
+
     </td>
   </tr>
 </table>
 
-<table>
-  <tr>
-    <td width="160" valign="top">
-      <img src="LOGO.png" alt="Lite Server Monitor Logo" width="140" height="140">
-    </td>
-    <td valign="top">
-    </table>
-
 ---
+
 
 # Lite Server Monitor (LSM)
 
