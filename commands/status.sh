@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
-main() {
-    log_info "Status command is not implemented yet."
+command_status() {
+    log_info "Collecting system status..."
+    log_warn "Not implemented yet."
 }
