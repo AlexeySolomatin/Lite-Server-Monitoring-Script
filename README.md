@@ -1,24 +1,15 @@
-<div align="center">
-  <!-- Вставьте ссылку на ваш логотип в тег src ниже -->
-  <img src="LOGO.png" alt="Lite Server Monitor Logo" width="140"
-  # Lite Server Monitor (LSM)
+<img src="LOGO.png" alt="Lite Server Monitor Logo" width="140" height="140" align="left" style="margin-right: 20px;">
 
-  _Lightweight, modular monitoring and security toolkit for Ubuntu and Debian servers._
+# Lite Server Monitor (LSM)
 
-  <p align="center">
-    ![Version](https://img.shields.io/badge/version-0.1.0--alpha-blue)
-![License](https://img.shields.io/badge/license-MIT-green)
-![Platform](https://img.shields.io/badge/platform-Ubuntu%20%7C%20Debian-orange)
-![Shell](https://img.shields.io/badge/bash-5.x-lightgrey)
-  </p>
+> Lightweight, modular monitoring and security toolkit for Ubuntu and Debian servers.
 
-  <h4>
-    <a href="#features">Features</a> | 
-    <a href="#why-lite-server-monitor">Why LSM?</a> | 
-    <a href="#installation">Installation</a> | 
-    <a href="#documentation">Documentation</a>
-  </h4>
-</div>
+![Version](https://shields.io)
+![License](https://shields.io)
+![Platform](https://shields.io)
+![Shell](https://shields.io)
+
+<br clear="left"/>
 
 ---
 
