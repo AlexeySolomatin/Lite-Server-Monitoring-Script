@@ -1,64 +1,78 @@
 #!/usr/bin/env bash
+#
+# -----------------------------------------------------------------------------
+# Lite Server Monitor (LSM)
+# SMTP Configuration Screen
+# -----------------------------------------------------------------------------
 
-wizard_smtp() {
+SMTP_PROFILE=""
+SMTP_SERVER=""
+SMTP_PORT=""
+SMTP_TLS=""
+SMTP_USERNAME=""
+SMTP_PASSWORD=""
+SMTP_FROM=""
 
-    local notifications="${INSTALL_CONFIG[notifications]}"
+screen_smtp() {
 
-    if [[ "${notifications}" != "email" && \
-          "${notifications}" != "both" ]]; then
-        return
-    fi
+    wizard_header
 
-    clear
-
-    print_header
-
-    echo "Email Provider"
+    echo "SMTP Configuration"
     echo
     echo "1) Gmail"
     echo "2) Yandex"
-    echo "3) Mail.ru"
-    echo "4) Office365"
-    echo "5) Custom SMTP"
+    echo "3) Manual"
     echo
 
     while true; do
 
-        read -rp "Select an option: " choice
+        read -rp "Select profile [1-3]: " answer
 
-        case "$choice" in
+        case "${answer}" in
 
             1)
-                INSTALL_CONFIG[smtp_provider]="gmail"
-                return
+
+                SMTP_PROFILE="gmail"
+                SMTP_SERVER="smtp.gmail.com"
+                SMTP_PORT="587"
+                SMTP_TLS="on"
+
+                break
                 ;;
 
             2)
-                INSTALL_CONFIG[smtp_provider]="yandex"
-                return
+
+                SMTP_PROFILE="yandex"
+                SMTP_SERVER="smtp.yandex.ru"
+                SMTP_PORT="465"
+                SMTP_TLS="on"
+
+                break
                 ;;
 
             3)
-                INSTALL_CONFIG[smtp_provider]="mailru"
-                return
-                ;;
 
-            4)
-                INSTALL_CONFIG[smtp_provider]="office365"
-                return
-                ;;
+                SMTP_PROFILE="manual"
 
-            5)
-                INSTALL_CONFIG[smtp_provider]="custom"
-                return
-                ;;
+                read -rp "SMTP Server: " SMTP_SERVER
+                read -rp "SMTP Port: " SMTP_PORT
+                read -rp "Use TLS (on/off): " SMTP_TLS
 
-            *)
-                log_warn "Invalid selection."
+                break
                 ;;
 
         esac
 
     done
+
+    echo
+
+    read -rp "Username: " SMTP_USERNAME
+
+    read -rsp "Password (Application Password): " SMTP_PASSWORD
+
+    echo
+
+    read -rp "Sender email: " SMTP_FROM
 
 }
