@@ -1,36 +1,37 @@
 #!/usr/bin/env bash
+#
+# -----------------------------------------------------------------------------
+# Lite Server Monitor (LSM)
+# Installation Wizard
+# -----------------------------------------------------------------------------
 
-declare -gA INSTALL_CONFIG
+readonly LSM_SCREENS_DIR="${LSM_ROOT}/installer/screens"
 
-# shellcheck source=/dev/null
-source "${PROJECT_ROOT}/installer/wizard/welcome.sh"
-
-# shellcheck source=/dev/null
-source "${PROJECT_ROOT}/installer/wizard/install_mode.sh"
-
-# shellcheck source=/dev/null
-source "${PROJECT_ROOT}/installer/wizard/notifications.sh"
-
-# shellcheck source=/dev/null
-source "${PROJECT_ROOT}/installer/wizard/smtp.sh"
-
-# shellcheck source=/dev/null
-source "${PROJECT_ROOT}/installer/wizard/ups.sh"
-
-# shellcheck source=/dev/null
-source "${PROJECT_ROOT}/installer/wizard/modules.sh"
-
-# shellcheck source=/dev/null
-source "${PROJECT_ROOT}/installer/wizard/summary.sh"
+source "${LSM_SCREENS_DIR}/common.sh"
+source "${LSM_SCREENS_DIR}/welcome.sh"
+source "${LSM_SCREENS_DIR}/install_mode.sh"
+source "${LSM_SCREENS_DIR}/modules.sh"
+source "${LSM_SCREENS_DIR}/notifications.sh"
+source "${LSM_SCREENS_DIR}/smtp.sh"
+source "${LSM_SCREENS_DIR}/ups.sh"
+source "${LSM_SCREENS_DIR}/summary.sh"
 
 run_install_wizard() {
 
-    wizard_welcome
-    wizard_install_mode
-    wizard_notifications
-    wizard_smtp
-    wizard_ups
-    wizard_modules
-    wizard_summary
+    screen_welcome
+    screen_install_mode
+    screen_modules
+    screen_notifications
+
+    if [[ "${NOTIFICATION_METHOD}" == "email" ]] ||
+       [[ "${NOTIFICATION_METHOD}" == "both" ]]; then
+        screen_smtp
+    fi
+
+    if [[ "${INSTALL_UPS}" == "true" ]]; then
+        screen_ups
+    fi
+
+    screen_summary
 
 }
