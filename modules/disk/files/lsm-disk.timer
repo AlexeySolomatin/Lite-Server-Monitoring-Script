@@ -1,1 +1,19 @@
+#
+# -----------------------------------------------------------------------------
+# Lite Server Monitor (LSM)
+# Disk Monitor Timer
+# -----------------------------------------------------------------------------
 
+[Unit]
+Description=Run Lite Server Monitor Disk Check
+
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=5min
+AccuracySec=30s
+Persistent=true
+
+Unit=lsm-disk.service
+
+[Install]
+WantedBy=timers.target
