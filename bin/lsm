@@ -20,11 +20,6 @@ readonly LSM_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 source "${LSM_ROOT}/lib/core/colors.sh"
 source "${LSM_ROOT}/lib/core/logging.sh"
 source "${LSM_ROOT}/lib/core/common.sh"
-source "${LSM_ROOT}/lib/core/config.sh"
-source "${LSM_ROOT}/lib/core/checks.sh"
-source "${LSM_ROOT}/lib/core/filesystem.sh"
-source "${LSM_ROOT}/lib/core/ui.sh"
-source "${LSM_ROOT}/lib/core/utils.sh"
 
 #
 # Parse command
