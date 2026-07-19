@@ -1,9 +1,15 @@
 #!/usr/bin/env bash
+#
+# -----------------------------------------------------------------------------
+# Lite Server Monitor (LSM)
+# Help Command
+# -----------------------------------------------------------------------------
 
-command_help() {
+set -Eeuo pipefail
 
 cat <<EOF
-Lite Server Monitor ${PROJECT_VERSION}
+
+Lite Server Monitor (LSM)
 
 Usage:
 
@@ -11,28 +17,17 @@ Usage:
 
 Commands:
 
-    install        Install Lite Server Monitor
-    update         Update Lite Server Monitor
-    uninstall      Remove Lite Server Monitor
+    install       Install Lite Server Monitor
+    uninstall     Remove Lite Server Monitor
+    update        Update Lite Server Monitor
 
-    doctor         Run diagnostics
-    status         Show current status
-    report         Generate health report
+    status        Show current status
+    modules       List available modules
+    report        Generate health report
+    doctor        Diagnose installation
+    config        Configure LSM
 
-    config         Configuration management
-    modules        Module management
-
-    version        Show version
-    help           Show this help
-
-Examples:
-
-    lsm install
-    lsm doctor
-    lsm status
-    lsm modules
-    lsm config
+    version       Show version
+    help          Show this help
 
 EOF
-
-}
