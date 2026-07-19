@@ -26,8 +26,4 @@ deploy_install_file \
     "${MODULE_DIR}/files/lsm-disk.timer" \
     "/etc/systemd/system/lsm-disk.timer"
 
-services_daemon_reload
-
-services_enable_and_start lsm-disk.timer
-
 log_success "Disk module installed."
