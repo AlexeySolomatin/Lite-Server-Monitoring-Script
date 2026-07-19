@@ -1,10 +1,16 @@
 #!/usr/bin/env bash
+#
+# -----------------------------------------------------------------------------
+# Lite Server Monitor (LSM)
+# Version Command
+# -----------------------------------------------------------------------------
 
-command_version() {
+set -Eeuo pipefail
 
-    echo "${PROJECT_NAME}"
-    echo "Version : ${PROJECT_VERSION}"
-    echo "Author  : ${PROJECT_AUTHOR}"
-    echo "License : MIT"
+VERSION_FILE="${LSM_ROOT}/VERSION"
 
-}
+if [[ -f "${VERSION_FILE}" ]]; then
+    cat "${VERSION_FILE}"
+else
+    echo "Development"
+fi
