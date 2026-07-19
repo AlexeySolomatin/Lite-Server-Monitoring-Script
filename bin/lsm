@@ -2,77 +2,91 @@
 #
 # -----------------------------------------------------------------------------
 # Lite Server Monitor (LSM)
-# Main Command Line Interface
+# Main CLI Entry Point
 # -----------------------------------------------------------------------------
 
 set -Eeuo pipefail
 
-readonly SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-readonly PROJECT_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
+#
+# Root directory
+#
 
-# Load core library
-source "${PROJECT_ROOT}/lib/core/common.sh"
+readonly LSM_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+
+#
+# Core libraries
+#
+
+source "${LSM_ROOT}/lib/core/colors.sh"
+source "${LSM_ROOT}/lib/core/logging.sh"
+source "${LSM_ROOT}/lib/core/common.sh"
+source "${LSM_ROOT}/lib/core/config.sh"
+source "${LSM_ROOT}/lib/core/checks.sh"
+source "${LSM_ROOT}/lib/core/filesystem.sh"
+source "${LSM_ROOT}/lib/core/ui.sh"
+source "${LSM_ROOT}/lib/core/utils.sh"
+
+#
+# Parse command
+#
+
+COMMAND="${1:-help}"
+
+if [[ $# -gt 0 ]]; then
+    shift
+fi
 
 #
 # Execute command
 #
-run_command() {
 
-    local command="$1"
-    shift || true
+case "${COMMAND}" in
 
-    local command_file="${PROJECT_ROOT}/commands/${command}.sh"
+    install)
+        source "${LSM_ROOT}/installer/install.sh"
+        ;;
 
-    if [[ ! -f "${command_file}" ]]; then
-        log_error "Unknown command: ${command}"
+    uninstall)
+        source "${LSM_ROOT}/installer/uninstall.sh"
+        ;;
+
+    update)
+        source "${LSM_ROOT}/installer/update.sh"
+        ;;
+
+    status)
+        source "${LSM_ROOT}/commands/status.sh"
+        ;;
+
+    report)
+        source "${LSM_ROOT}/commands/report.sh"
+        ;;
+
+    doctor)
+        source "${LSM_ROOT}/commands/doctor.sh"
+        ;;
+
+    modules)
+        source "${LSM_ROOT}/commands/modules.sh"
+        ;;
+
+    config)
+        source "${LSM_ROOT}/commands/config.sh"
+        ;;
+
+    version)
+        source "${LSM_ROOT}/commands/version.sh"
+        ;;
+
+    help|-h|--help)
+        source "${LSM_ROOT}/commands/help.sh"
+        ;;
+
+    *)
+        log_error "Unknown command: ${COMMAND}"
         echo
-        source "${PROJECT_ROOT}/commands/help.sh"
-        command_help
+        source "${LSM_ROOT}/commands/help.sh"
         exit 1
-    fi
+        ;;
 
-    # shellcheck source=/dev/null
-    source "${command_file}"
-
-    local function_name="command_${command}"
-
-    if ! declare -F "${function_name}" >/dev/null; then
-        log_error "Command implementation not found: ${function_name}"
-        exit 1
-    fi
-
-    "${function_name}" "$@"
-}
-
-#
-# Main
-#
-main() {
-
-    local command="${1:-help}"
-
-    case "${command}" in
-
-        install|update|uninstall|doctor|status|report|version|help|config|modules)
-
-            shift || true
-            run_command "${command}" "$@"
-            ;;
-
-        -h|--help)
-
-            run_command help
-            ;;
-
-        *)
-
-            log_error "Unknown command: ${command}"
-            echo
-            run_command help
-            exit 1
-            ;;
-
-    esac
-}
-
-main "$@"
+esac
