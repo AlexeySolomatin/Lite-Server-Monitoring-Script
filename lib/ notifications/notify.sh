@@ -5,68 +5,44 @@
 # Notification Dispatcher
 # -----------------------------------------------------------------------------
 
-set -Eeuo pipefail
+[[ -n "${LSM_NOTIFY_LOADED:-}" ]] && return
+readonly LSM_NOTIFY_LOADED=1
 
 
-CONFIG_FILE="/etc/lsm/config"
+NOTIFY_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 
-#
-# Load configuration
-#
+# shellcheck source=/dev/null
+source "${NOTIFY_DIR}/telegram.sh"
 
-[[ -f "${CONFIG_FILE}" ]] &&
-    source "${CONFIG_FILE}"
-
-
-#
-# Notification modules
-#
-
-NOTIFY_TELEGRAM="${NOTIFY_TELEGRAM:-false}"
-NOTIFY_EMAIL="${NOTIFY_EMAIL:-false}"
-
-
-#
-# Paths
-#
-
-LSM_LIB="/opt/lsm/lib/notifications"
+# shellcheck source=/dev/null
+source "${NOTIFY_DIR}/email.sh"
 
 
 
 notify_send()
 {
 
-    local TITLE="$1"
-    local MESSAGE="$2"
+    local title="$1"
+    local message="$2"
 
 
-    #
-    # Telegram
-    #
+    if [[ "${NOTIFY_TELEGRAM:-false}" == "true" ]]; then
 
-    if [[ "${NOTIFY_TELEGRAM}" == "true" ]]; then
-
-        "${LSM_LIB}/telegram.sh" \
-            "${TITLE}" \
-            "${MESSAGE}" || true
+        "${NOTIFY_DIR}/telegram.sh" \
+            "${title}" \
+            "${message}"
 
     fi
 
 
 
-    #
-    # Email
-    #
+    if [[ "${NOTIFY_EMAIL:-false}" == "true" ]]; then
 
-    if [[ "${NOTIFY_EMAIL}" == "true" ]]; then
-
-        "${LSM_LIB}/email.sh" \
-            "${TITLE}" \
-            "${MESSAGE}" || true
+        "${NOTIFY_DIR}/email.sh" \
+            "${title}" \
+            "${message}"
 
     fi
-
 
 }
