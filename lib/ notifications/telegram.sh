@@ -17,6 +17,10 @@ SECRETS_FILE="${SECRETS_FILE:-/etc/lsm/secrets.conf}"
     source "${CONFIG_FILE}"
 
 
+[[ -f "${SECRETS_FILE}" ]] &&
+    source "${SECRETS_FILE}"
+
+
 
 TITLE="$1"
 MESSAGE="$2"
