@@ -1,0 +1,30 @@
+#
+# -----------------------------------------------------------------------------
+# Lite Server Monitor (LSM)
+# UPS Monitor Timer
+# -----------------------------------------------------------------------------
+
+[Unit]
+
+Description=Run Lite Server Monitor UPS Check
+
+
+
+[Timer]
+
+OnBootSec=2min
+
+OnUnitActiveSec=1min
+
+AccuracySec=15s
+
+Persistent=true
+
+
+Unit=lsm-ups.service
+
+
+
+[Install]
+
+WantedBy=timers.target
