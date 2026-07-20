@@ -8,8 +8,7 @@
 set -Eeuo pipefail
 
 
-CONFIG_FILE="/etc/lsm/config"
-
+CONFIG_FILE="${NOTIFICATIONS_FILE:-/etc/lsm/notifications.conf}"
 
 [[ -f "${CONFIG_FILE}" ]] &&
     source "${CONFIG_FILE}"
