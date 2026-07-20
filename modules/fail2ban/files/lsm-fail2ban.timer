@@ -1,0 +1,28 @@
+#
+# -----------------------------------------------------------------------------
+# Lite Server Monitor (LSM)
+# Fail2Ban Monitor Timer
+# -----------------------------------------------------------------------------
+
+[Unit]
+
+Description=Run Lite Server Monitor Fail2Ban Check
+
+
+[Timer]
+
+OnBootSec=5min
+
+OnUnitActiveSec=5min
+
+AccuracySec=30s
+
+Persistent=true
+
+
+Unit=lsm-fail2ban.service
+
+
+[Install]
+
+WantedBy=timers.target
