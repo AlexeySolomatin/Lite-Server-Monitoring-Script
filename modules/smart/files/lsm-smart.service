@@ -5,8 +5,9 @@
 # -----------------------------------------------------------------------------
 
 [Unit]
-Description=Lite Server Monitor - SMART Monitor
+Description=Lite Server Monitor - SMART Disk Health Monitor
 Documentation=https://github.com/AlexeySolomatin/Lite-Server-Monitor
+After=network-online.target
 
 [Service]
 Type=oneshot
@@ -23,3 +24,6 @@ ProtectHome=true
 ReadWritePaths=/var/lib/lsm /var/log/lsm
 
 Nice=10
+
+[Install]
+WantedBy=multi-user.target
