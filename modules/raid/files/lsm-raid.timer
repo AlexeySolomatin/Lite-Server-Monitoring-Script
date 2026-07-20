@@ -1,0 +1,19 @@
+#
+# -----------------------------------------------------------------------------
+# Lite Server Monitor (LSM)
+# RAID Monitor Timer
+# -----------------------------------------------------------------------------
+
+[Unit]
+Description=Run Lite Server Monitor RAID Check
+
+[Timer]
+OnBootSec=3min
+OnUnitActiveSec=5min
+AccuracySec=30s
+Persistent=true
+
+Unit=lsm-raid.service
+
+[Install]
+WantedBy=timers.target
