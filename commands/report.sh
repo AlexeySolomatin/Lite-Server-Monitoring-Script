@@ -1,8 +1,41 @@
 #!/usr/bin/env bash
+#
+# -----------------------------------------------------------------------------
+# Lite Server Monitor (LSM)
+# Report Command
+# -----------------------------------------------------------------------------
 
-command_report() {
+set -Eeuo pipefail
 
-    log_info "Generating health report..."
-    log_warn "Not implemented yet."
+echo
+echo "Lite Server Monitor Report"
+echo "=========================="
+echo
 
-}
+echo "Hostname : $(hostname)"
+echo "Kernel   : $(uname -r)"
+echo
+
+echo "Uptime"
+
+uptime
+
+echo
+
+echo "Memory"
+
+free -h
+
+echo
+
+echo "Filesystem"
+
+df -h
+
+echo
+
+echo "Load"
+
+cat /proc/loadavg
+
+echo
