@@ -1,8 +1,17 @@
 #!/usr/bin/env bash
+#
+# -----------------------------------------------------------------------------
+# Lite Server Monitor (LSM)
+# Configuration Command
+# -----------------------------------------------------------------------------
 
-command_config() {
+set -Eeuo pipefail
 
-    log_info "Configuration manager"
-    log_warn "Not implemented yet."
+CONFIG_DIR="/etc/lsm"
 
-}
+echo
+echo "Configuration files"
+echo "==================="
+echo
+
+find "${CONFIG_DIR}" -type f | sort
