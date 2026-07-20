@@ -1,0 +1,19 @@
+#
+# -----------------------------------------------------------------------------
+# Lite Server Monitor (LSM)
+# Temperature Monitor Timer
+# -----------------------------------------------------------------------------
+
+[Unit]
+Description=Run Lite Server Monitor Temperature Check
+
+[Timer]
+OnBootSec=5min
+OnUnitActiveSec=5min
+AccuracySec=30s
+Persistent=true
+
+Unit=lsm-temperature.service
+
+[Install]
+WantedBy=timers.target
