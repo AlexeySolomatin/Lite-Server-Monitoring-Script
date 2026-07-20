@@ -80,3 +80,23 @@ source "${CORE_DIR}/ui.sh"
 
 # shellcheck source=/dev/null
 source "${CORE_DIR}/utils.sh"
+
+#
+# Load notification libraries
+#
+
+readonly NOTIFICATIONS_DIR="${LIB_DIR}/notifications"
+
+
+if [[ -d "${NOTIFICATIONS_DIR}" ]]; then
+
+
+    if [[ -f "${NOTIFICATIONS_DIR}/notify.sh" ]]; then
+
+        # shellcheck source=/dev/null
+        source "${NOTIFICATIONS_DIR}/notify.sh"
+
+    fi
+
+
+fi
