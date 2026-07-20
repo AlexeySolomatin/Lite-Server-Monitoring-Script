@@ -21,13 +21,13 @@ No additional packages.
 
 ## Configuration
 
+```
 /etc/lsm/modules/system.conf
-
-
+```
 
 ## Installed Files
 
-
+```
 /opt/lsm/modules/system/check_system.sh
 
 /etc/systemd/system/lsm-system.service
@@ -35,9 +35,10 @@ No additional packages.
 /etc/systemd/system/lsm-system.timer
 
 /etc/lsm/modules/system.conf
-
-
+```
 
 ## Default Schedule
 
 Every 5 minutes
+
+
