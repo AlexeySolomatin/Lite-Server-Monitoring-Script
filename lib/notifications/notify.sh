@@ -113,7 +113,8 @@ notify() {
         [[ "${is_escalation}" == "true" ]] && icon="🚨 [ЭСКАЛАЦИЯ]"
 
         local subject="${icon} [${level}] [${hostname}] Модуль: ${module}"
-        local full_msg="Обнаружена проблема на сервере ${hostname}.\n\nУровень: ${level}\nМодуль: ${module}\nВремя: $(date '+%Y-%m-%d %H:%M:%S')\n\nДетали:\n${message}"
+        local full_msg
+        full_msg="Обнаружена проблема на сервере ${hostname}.\n\nУровень: ${level}\nМодуль: ${module}\nВремя: $(date '+%Y-%m-%d %H:%M:%S')\n\nДетали:\n${message}"
 
         dispatch_raw_notification "${subject}" "${full_msg}"
     fi
