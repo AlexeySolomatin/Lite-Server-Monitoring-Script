@@ -2,39 +2,53 @@
 #
 # -----------------------------------------------------------------------------
 # Lite Server Monitor (LSM)
-# System Module Installer
+# System Resources Module Installer
 # -----------------------------------------------------------------------------
 
 set -Eeuo pipefail
 
 MODULE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+LSM_ROOT="${LSM_ROOT:-/opt/lsm}"
 
-log_info "Installing System module..."
+if [[ -f "${LSM_ROOT}/lib/core/common.sh" ]]; then source "${LSM_ROOT}/lib/core/common.sh"; fi
+if [[ -f "${LSM_ROOT}/lib/core/ui.sh" ]]; then source "${LSM_ROOT}/lib/core/ui.sh"; fi
+if [[ -f "${LSM_ROOT}/lib/installer/deploy.sh" ]]; then source "${LSM_ROOT}/lib/installer/deploy.sh"; fi
 
+log_info "Installing System Resources monitoring module..."
 
-deploy_create_directory \
-    "/opt/lsm/modules/system"
+# 1. Директории
+deploy_create_directory "${LSM_ROOT}/modules/system" "755" "root" "root"
+deploy_create_directory "/etc/lsm/modules" "755" "root" "root"
 
+# 2. Исполняемый файл
+if [[ -f "${MODULE_DIR}/files/check_system.sh" ]]; then
+    deploy_install_file \
+        "${MODULE_DIR}/files/check_system.sh" \
+        "${LSM_ROOT}/modules/system/check_system.sh" \
+        "755" "root" "root"
+fi
 
-deploy_install_file \
-    "${MODULE_DIR}/files/check_system.sh" \
-    "/opt/lsm/modules/system/check_system.sh" \
-    755
+# 3. Systemd юниты
+if [[ -f "${MODULE_DIR}/files/lsm-system.service" ]]; then
+    deploy_install_file "${MODULE_DIR}/files/lsm-system.service" "/etc/systemd/system/lsm-system.service" "644" "root" "root"
+fi
+if [[ -f "${MODULE_DIR}/files/lsm-system.timer" ]]; then
+    deploy_install_file "${MODULE_DIR}/files/lsm-system.timer" "/etc/systemd/system/lsm-system.timer" "644" "root" "root"
+fi
 
+# 4. Конфигурация
+if [[ -f "${MODULE_DIR}/templates/system.conf" ]]; then
+    if [[ ! -f "/etc/lsm/modules/system.conf" ]]; then
+        deploy_install_file "${MODULE_DIR}/templates/system.conf" "/etc/lsm/modules/system.conf" "640" "root" "root"
+    else
+        log_warn "Configuration /etc/lsm/modules/system.conf already exists, skipping overwrite."
+    fi
+fi
 
-deploy_install_file \
-    "${MODULE_DIR}/files/lsm-system.service" \
-    "/etc/systemd/system/lsm-system.service"
+# 5. Активация таймера
+if command -v systemctl >/dev/null 2>&1; then
+    systemctl daemon-reload || true
+    systemctl enable --now lsm-system.timer || true
+fi
 
-
-deploy_install_file \
-    "${MODULE_DIR}/files/lsm-system.timer" \
-    "/etc/systemd/system/lsm-system.timer"
-
-
-templates_install \
-    "modules/system.conf" \
-    "/etc/lsm/modules/system.conf"
-
-
-log_success "System module installed."
+log_success "System monitoring module installed successfully."
