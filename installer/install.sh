@@ -29,7 +29,6 @@ source "${LSM_ROOT}/lib/core/utils.sh"
 source "${LSM_ROOT}/lib/installer/packages.sh"
 source "${LSM_ROOT}/lib/installer/deploy.sh"
 source "${LSM_ROOT}/lib/installer/services.sh"
-source "${LSM_ROOT}/lib/installer/templates.sh"
 source "${LSM_ROOT}/lib/installer/permissions.sh"
 source "${LSM_ROOT}/lib/installer/modules.sh"
 
