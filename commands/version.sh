@@ -7,10 +7,12 @@
 
 set -Eeuo pipefail
 
+LSM_ROOT="${LSM_ROOT:-/opt/lsm}"
 VERSION_FILE="${LSM_ROOT}/VERSION"
 
 if [[ -f "${VERSION_FILE}" ]]; then
-    cat "${VERSION_FILE}"
+    tr -d '\r\n' < "${VERSION_FILE}"
+    echo
 else
     echo "Development"
 fi
