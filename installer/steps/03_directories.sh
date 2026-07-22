@@ -10,28 +10,29 @@ set -Eeuo pipefail
 step_directories() {
     log_info "Creating LSM directory structure and deploying files..."
 
-    local target="${LSM_ROOT:-/opt/lsm}"
+    local target_dir="/opt/lsm"
     local src_dir
 
     src_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 
-    mkdir -p "${target}"/{bin,commands,installer,lib,modules,templates}
+    # Создаем системные каталоги
+    mkdir -p "${target_dir}"/{bin,commands,installer,lib,modules,templates}
     mkdir -p /etc/lsm/modules
     mkdir -p /var/log/lsm
 
-    # Копирование исходных файлов в целевую систему
-    if [[ "${src_dir}" != "${target}" ]]; then
-        cp -rf "${src_dir}/bin" "${target}/"
-        cp -rf "${src_dir}/commands" "${target}/"
-        cp -rf "${src_dir}/lib" "${target}/"
-        cp -rf "${src_dir}/modules" "${target}/"
-        cp -rf "${src_dir}/templates" "${target}/" 2>/dev/null || true
+    # Копируем исходники из временной папки во постоянную /opt/lsm
+    if [[ "${src_dir}" != "${target_dir}" ]]; then
+        cp -rf "${src_dir}/bin" "${target_dir}/"
+        cp -rf "${src_dir}/commands" "${target_dir}/"
+        cp -rf "${src_dir}/lib" "${target_dir}/"
+        cp -rf "${src_dir}/modules" "${target_dir}/"
+        cp -rf "${src_dir}/templates" "${target_dir}/" 2>/dev/null || true
     fi
 
-    chmod -R 755 "${target}"
-    chmod +x "${target}/bin/lsm"
+    chmod -R 755 "${target_dir}"
+    chmod +x "${target_dir}/bin/lsm" 2>/dev/null || true
 
-    log_success "Directory structure created at ${target}"
+    log_success "Directory structure created at ${target_dir}"
 }
 
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
