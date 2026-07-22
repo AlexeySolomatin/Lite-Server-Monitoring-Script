@@ -1,11 +1,10 @@
 #!/usr/bin/env bash
 
 step_configuration() {
+    log_info "Installing default configuration..."
 
-    log_step "Installing configuration"
-
-    templates_install \
-        config/config \
-        /etc/lsm/config.conf
-
+    deploy_install_file \
+        "${LSM_ROOT}/templates/config.conf" \
+        "/etc/lsm/config.conf" \
+        640
 }
