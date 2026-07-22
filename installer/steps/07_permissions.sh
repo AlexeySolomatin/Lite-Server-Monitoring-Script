@@ -2,7 +2,7 @@
 #
 # -----------------------------------------------------------------------------
 # Lite Server Monitor (LSM)
-# Step 07: Permissions & Global CLI Symlink
+# Step 07: Permissions & Global CLI Symlinks
 # -----------------------------------------------------------------------------
 
 set -Eeuo pipefail
@@ -17,17 +17,15 @@ step_permissions() {
         chmod +x "${target_dir}/bin/lsm" 2>/dev/null || true
     fi
 
-    log_info "Creating global CLI symlink (/usr/local/bin/lsm)..."
+    log_info "Creating global CLI symlinks..."
     
     if [[ -f "${target_dir}/bin/lsm" ]]; then
         ln -sf "${target_dir}/bin/lsm" "/usr/local/bin/lsm"
-        log_success "Global command 'lsm' linked to /usr/local/bin/lsm"
+        ln -sf "${target_dir}/bin/lsm" "/usr/bin/lsm"
+        log_success "Global command 'lsm' linked to /usr/bin/lsm"
     else
         log_warn "Executable ${target_dir}/bin/lsm not found, skipping symlink creation."
     fi
-
-    log_success "Lite Server Monitor installation completed successfully!"
-    log_info "Run 'lsm help' to see available commands."
 }
 
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
