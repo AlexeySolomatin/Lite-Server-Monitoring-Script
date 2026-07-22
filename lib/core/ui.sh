@@ -7,6 +7,17 @@
 
 set -Eeuo pipefail
 
+# Автоопределение версии из файла VERSION (если PROJECT_VERSION еще не задана)
+if [[ -z "${PROJECT_VERSION:-}" ]]; then
+    LSM_ROOT="${LSM_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
+    if [[ -f "${LSM_ROOT}/VERSION" ]]; then
+        PROJECT_VERSION="$(tr -d '\r\n' < "${LSM_ROOT}/VERSION")"
+    else
+        PROJECT_VERSION="0.1.1-alpha"
+    fi
+    export PROJECT_VERSION
+fi
+
 # Определение цветов (ANSI-C quoting гарантирует работу с 'cat' и 'echo')
 if [[ -t 1 ]]; then
     COLOR_RESET=$'\033[0m'
@@ -37,7 +48,7 @@ print_header() {
 ${COLOR_CYAN}${COLOR_BOLD}=====================================================================${COLOR_RESET}
 ${COLOR_CYAN}${COLOR_BOLD}   __    ____  __  __   (LSM) Lite Server Monitor                    ${COLOR_RESET}
 ${COLOR_CYAN}${COLOR_BOLD}  / /   / __/ /  \/  |   Lightweight System Monitoring & Alerting     ${COLOR_RESET}
-${COLOR_CYAN}${COLOR_BOLD} / /___ \__ \ / /\_/ |   Version: ${PROJECT_VERSION:-1.0.0}                    ${COLOR_RESET}
+${COLOR_CYAN}${COLOR_BOLD} / /___ \__ \ / /\_/ |   Version: ${PROJECT_VERSION}                           ${COLOR_RESET}
 ${COLOR_CYAN}${COLOR_BOLD}/_____//____//_/   /_/   Linux Server Management Tools                ${COLOR_RESET}
 ${COLOR_CYAN}${COLOR_BOLD}=====================================================================${COLOR_RESET}
 
@@ -50,7 +61,12 @@ ui_section() {
     echo -e "\n${COLOR_BOLD}---> ${title}${COLOR_RESET}"
 }
 
-# Форматирование сообщений с иконками (использование $* позволяет передавать фразы без кавычек)
+# Алиас для совместимости со шагами инсталлятора
+print_section() {
+    ui_section "$@"
+}
+
+# Форматирование сообщений с иконками
 log_info() {
     echo "[${COLOR_BLUE}INFO${COLOR_RESET}] $*"
 }
