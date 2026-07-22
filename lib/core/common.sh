@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# shellcheck disable=SC2034
+
 #
 # -----------------------------------------------------------------------------
 # Lite Server Monitor (LSM)
@@ -22,7 +24,7 @@ readonly PROJECT_LICENSE="MIT"
 #
 # Installation paths
 #
-# shellcheck disable=SC2034
+
 readonly INSTALL_DIR="/opt/lsm"
 
 readonly CONFIG_DIR="/etc/lsm"
