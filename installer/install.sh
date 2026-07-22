@@ -28,13 +28,14 @@ log_info "Starting Lite Server Monitor (LSM) v${PROJECT_VERSION} installation...
 
 # Запуск шагов установки
 STEPS=(
-    "01_system_check.sh"
+    "01_environment.sh"
     "02_packages.sh"
     "03_directories.sh"
     "04_configuration.sh"
     "05_modules.sh"
     "06_services.sh"
     "07_permissions.sh"
+    "08_finish.sh"
 )
 
 for step_script in "${STEPS[@]}"; do
