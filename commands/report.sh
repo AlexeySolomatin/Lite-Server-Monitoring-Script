@@ -2,40 +2,26 @@
 #
 # -----------------------------------------------------------------------------
 # Lite Server Monitor (LSM)
-# Report Command
+# CLI Command: Report
 # -----------------------------------------------------------------------------
 
 set -Eeuo pipefail
 
-echo
-echo "Lite Server Monitor Report"
-echo "=========================="
-echo
+LSM_ROOT="${LSM_ROOT:-/opt/lsm}"
 
-echo "Hostname : $(hostname)"
-echo "Kernel   : $(uname -r)"
-echo
+if [[ -f "${LSM_ROOT}/lib/core/common.sh" ]]; then source "${LSM_ROOT}/lib/core/common.sh"; fi
+if [[ -f "${LSM_ROOT}/lib/core/ui.sh" ]]; then source "${LSM_ROOT}/lib/core/ui.sh"; fi
 
-echo "Uptime"
+ui_section "LSM System Diagnostic Report"
 
-uptime
+echo -e "\n=== Memory Usage ==="
+free -h 2>/dev/null || echo "Unable to fetch RAM stats"
 
-echo
+echo -e "\n=== Filesystem Usage ==="
+df -h -x tmpfs -x devtmpfs 2>/dev/null || echo "Unable to fetch disk stats"
 
-echo "Memory"
+echo -e "\n=== Top 5 CPU Consuming Processes ==="
+ps aux --sort=-%cpu 2>/dev/null | head -n 6 || true
 
-free -h
-
-echo
-
-echo "Filesystem"
-
-df -h
-
-echo
-
-echo "Load"
-
-cat /proc/loadavg
-
-echo
+echo ""
+log_success "Report generated successfully."
