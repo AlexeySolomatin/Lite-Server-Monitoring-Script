@@ -8,6 +8,7 @@
 set -Eeuo pipefail
 
 readonly REPOSITORY_URL="https://github.com/AlexeySolomatin/Lite-Server-Monitor.git"
+readonly ARCHIVE_URL="https://github.com/AlexeySolomatin/Lite-Server-Monitor/archive/refs/heads/main.tar.gz"
 
 TEMP_DIR="$(mktemp -d)"
 readonly TEMP_DIR
@@ -28,29 +29,39 @@ echo
 #
 
 if [[ "${EUID}" -ne 0 ]]; then
-    echo "ERROR: Please run as root."
+    echo "ERROR: Please run as root (use sudo)."
     exit 1
 fi
 
 #
-# Install git if required
+# Download source files
 #
 
-if ! command -v git >/dev/null 2>&1; then
-    echo "Installing git..."
+echo "Downloading Lite Server Monitor..."
 
-    apt-get update
-    apt-get install -y git
+if command -v git >/dev/null 2>&1; then
+    git clone --depth 1 "${REPOSITORY_URL}" "${SOURCE_DIR}" >/dev/null 2>&1
+elif command -v curl >/dev/null 2>&1; then
+    mkdir -p "${SOURCE_DIR}"
+    curl -fsSL "${ARCHIVE_URL}" | tar -xz -C "${SOURCE_DIR}" --strip-components=1
+else
+    echo "ERROR: Neither 'git' nor 'curl' is installed. Please install one of them and try again."
+    exit 1
 fi
 
-echo
-echo "Downloading Lite Server Monitor..."
-echo
+#
+# Fix execution permissions
+#
 
-git clone "${REPOSITORY_URL}" "${SOURCE_DIR}"
+chmod -R +x "${SOURCE_DIR}"
+
+#
+# Run main installer
+#
 
 echo
 echo "Starting installer..."
 echo
 
-exec "${SOURCE_DIR}/installer/install.sh"
+# ВАЖНО: Вызываем через bash (без exec), чтобы сработал 'trap cleanup EXIT'
+bash "${SOURCE_DIR}/installer/install.sh" "$@"
