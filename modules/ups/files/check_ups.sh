@@ -7,228 +7,127 @@
 
 set -Eeuo pipefail
 
+# Сброс локали
+export LC_ALL=C
+export LANG=C
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../../.." && pwd)"
 
 #
-# Configuration
+# Конфигурация
 #
 
 CONFIG_FILE="/etc/lsm/modules/ups.conf"
-
 if [[ -f "${CONFIG_FILE}" ]]; then
     # shellcheck source=/dev/null
     source "${CONFIG_FILE}"
 fi
 
-
 #
-# Defaults
+# Значения по умолчанию
 #
 
 BATTERY_WARNING="${BATTERY_WARNING:-50}"
 BATTERY_CRITICAL="${BATTERY_CRITICAL:-20}"
 
-RUNTIME_WARNING="${RUNTIME_WARNING:-10}"
-
-
 NOTIFY_ON_BATTERY="${NOTIFY_ON_BATTERY:-true}"
 NOTIFY_ON_LOW_BATTERY="${NOTIFY_ON_LOW_BATTERY:-true}"
 NOTIFY_ON_RECOVERY="${NOTIFY_ON_RECOVERY:-true}"
 
-
-#
-# Paths
-#
-
 STATE_DIR="/var/lib/lsm/state"
-
 STATE_FILE="${STATE_DIR}/ups_state"
-
 LOCK_FILE="${STATE_DIR}/ups_check.lock"
+NOTIFY_SCRIPT="${PROJECT_ROOT}/lib/notifications/notify.sh"
 
+#
+# Проверка наличия apcaccess
+#
+if ! command -v apcaccess &>/dev/null; then
+    echo "SKIP: Утилита 'apcaccess' не найдена в системе (apcupsd не установлен)."
+    exit 0
+fi
 
+# Гарантируем наличие директории ДО открытия файла блокировки
+mkdir -p "${STATE_DIR}"
 
 (
-    #
-    # Prevent parallel execution
-    #
-
+    # Защита от параллельного запуска
     flock -n 200 || exit 0
 
+    UPS_STATUS=$(apcaccess status 2>/dev/null || true)
 
-
-    #
-    # Check apcupsd
-    #
-
-    if ! command -v apcaccess >/dev/null 2>&1; then
+    if [[ -z "${UPS_STATUS}" ]]; then
+        echo "SKIP: Служба apcupsd не ответила на запрос apcaccess status."
         exit 0
     fi
 
+    #
+    # Извлечение и очистка параметров
+    #
+    STATUS_RAW=$(echo "${UPS_STATUS}" | awk -F': ' '/STATUS/ {print $2}' | xargs || true)
+    CHARGE_RAW=$(echo "${UPS_STATUS}" | awk -F': ' '/BCHARGE/ {print $2}' | awk '{print $1}' || true)
+    TIMELEFT_RAW=$(echo "${UPS_STATUS}" | awk -F': ' '/TIMELEFT/ {print $2}' | xargs || true)
 
-
-    UPS_STATUS=$(
-
-        apcaccess status 2>/dev/null || true
-
-    )
-
-
-    [[ -z "${UPS_STATUS}" ]] && exit 0
-
-
+    CHARGE_INT=100
+    if [[ -n "${CHARGE_RAW}" ]]; then
+        CHARGE_INT=${CHARGE_RAW%.*}
+    fi
 
     #
-    # Parse values
+    # Определение текущего состояния ИБП
     #
-
-    STATUS=$(
-
-        echo "${UPS_STATUS}" |
-        awk -F': ' '/STATUS/ {print $2}'
-
-    )
-
-
-    CHARGE=$(
-
-        echo "${UPS_STATUS}" |
-        awk -F': ' '/BCHARGE/ {print $2}' |
-        tr -d '%'
-
-    )
-
-
-    TIMELEFT=$(
-
-        echo "${UPS_STATUS}" |
-        awk -F': ' '/TIMELEFT/ {print $2}'
-
-    )
-
-
-
     CURRENT_STATE="ONLINE"
 
-
-
-    #
-    # UPS on battery
-    #
-
-    if [[ "${STATUS}" != "ONLINE" ]]; then
-
-        CURRENT_STATE="ON_BATTERY"
-
-
-        if [[ "${NOTIFY_ON_BATTERY}" == "true" ]]; then
-
-
-            PREVIOUS_STATE=""
-
-            [[ -f "${STATE_FILE}" ]] &&
-                PREVIOUS_STATE=$(cat "${STATE_FILE}")
-
-
-            if [[ "${PREVIOUS_STATE}" != "${CURRENT_STATE}" ]]; then
-
-
-                notify_send \
-                    "UPS" \
-                    "🔋 UPS switched to battery power.
-Charge: ${CHARGE}%
-Runtime: ${TIMELEFT}" || true
-
-
-            fi
-
-
-        fi
-
-
-    fi
-
-
-
-    #
-    # Low battery
-    #
-
-    if [[ -n "${CHARGE}" ]]; then
-
-
-        CHARGE_INT=${CHARGE%.*}
-
-
+    if [[ "${STATUS_RAW}" != *"ONLINE"* ]]; then
         if (( CHARGE_INT <= BATTERY_CRITICAL )); then
-
-
-            CURRENT_STATE="LOW_BATTERY"
-
-
-            if [[ "${NOTIFY_ON_LOW_BATTERY}" == "true" ]]; then
-
-
-                notify_send \
-                    "UPS" \
-                    "⚠️ UPS battery critical.
-Charge: ${CHARGE}%
-Runtime: ${TIMELEFT}" || true
-
-
-            fi
-
-
+            CURRENT_STATE="CRITICAL"
         elif (( CHARGE_INT <= BATTERY_WARNING )); then
-
-
-            CURRENT_STATE="BATTERY_LOW"
-
-
+            CURRENT_STATE="WARNING"
+        else
+            CURRENT_STATE="ON_BATTERY"
         fi
-
-
     fi
 
-
-
-    #
-    # Recovery
-    #
-
+    PREVIOUS_STATE=""
     if [[ -f "${STATE_FILE}" ]]; then
-
-
-        PREVIOUS_STATE=$(cat "${STATE_FILE}")
-
-
-        if [[ "${PREVIOUS_STATE}" != "ONLINE" ]] &&
-           [[ "${CURRENT_STATE}" == "ONLINE" ]]; then
-
-
-            if [[ "${NOTIFY_ON_RECOVERY}" == "true" ]]; then
-
-
-                notify_send \
-                    "UPS" \
-                    "✅ UPS power restored." || true
-
-
-            fi
-
-
-        fi
-
-
+        PREVIOUS_STATE=$(cat "${STATE_FILE}" || true)
     fi
 
-
-
     #
-    # Save state
+    # Обработка смены состояний и отправка уведомлений
     #
+    if [[ "${PREVIOUS_STATE}" != "${CURRENT_STATE}" ]]; then
+        if [[ -f "${NOTIFY_SCRIPT}" ]]; then
+            # shellcheck source=/dev/null
+            source "${NOTIFY_SCRIPT}"
 
-    echo "${CURRENT_STATE}" > "${STATE_FILE}"
+            case "${CURRENT_STATE}" in
+                "ON_BATTERY")
+                    if [[ "${NOTIFY_ON_BATTERY}" == "true" ]]; then
+                        notify "ups" "WARNING" "🔋 ИБП перешел на питание от батареи!\n- Заряд: ${CHARGE_RAW:-unknown}%\n- Осталось времени: ${TIMELEFT_RAW:-unknown}"
+                    fi
+                    ;;
+                "WARNING")
+                    if [[ "${NOTIFY_ON_LOW_BATTERY}" == "true" ]]; then
+                        notify "ups" "WARNING" "⚠️ Низкий уровень заряда ИБП!\n- Заряд: ${CHARGE_RAW:-unknown}%\n- Осталось времени: ${TIMELEFT_RAW:-unknown}"
+                    fi
+                    ;;
+                "CRITICAL")
+                    if [[ "${NOTIFY_ON_LOW_BATTERY}" == "true" ]]; then
+                        notify "ups" "CRITICAL" "🚨 Критический уровень заряда ИБП!\n- Заряд: ${CHARGE_RAW:-unknown}%\n- Осталось времени: ${TIMELEFT_RAW:-unknown}"
+                    fi
+                    ;;
+                "ONLINE")
+                    if [[ -n "${PREVIOUS_STATE}" && "${NOTIFY_ON_RECOVERY}" == "true" ]]; then
+                        notify "ups" "OK" "✅ Питание ИБП восстановлено (Работа от сети)."
+                    fi
+                    ;;
+            esac
+        fi
 
-
+        # Фиксируем актуальное состояние
+        echo "${CURRENT_STATE}" > "${STATE_FILE}"
+    fi
 
 ) 200>"${LOCK_FILE}"
