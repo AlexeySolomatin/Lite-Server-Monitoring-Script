@@ -37,15 +37,73 @@ step_configuration() {
         cp -a "${config_file}" "${backup_file}"
     fi
 
-    # 4. Копируем конфигурацию с безопасными правами (640, root:root)
+    # 4. Копируем конфигурацию с базовыми правами
     log_info "Installing ${config_file}..."
     if declare -f deploy_install_file >/dev/null 2>&1; then
-        deploy_install_file "${template_source}" "${config_file}" "640" "root" "root"
+        deploy_install_file "${template_source}" "${config_file}" "600" "root" "root"
     else
         cp "${template_source}" "${config_file}"
-        chmod 640 "${config_file}"
+        chmod 600 "${config_file}"
         chown root:root "${config_file}"
     fi
+
+    # =========================================================================
+    # 5. Применение введенных в Wizard переменных
+    # =========================================================================
+    log_info "Applying custom parameters from wizard..."
+
+    # Включение каналов уведомлений
+    if [[ -n "${NOTIFICATION_METHOD:-}" ]]; then
+        case "${NOTIFICATION_METHOD}" in
+            telegram)
+                sed -i 's|^TELEGRAM_ENABLED=.*|TELEGRAM_ENABLED="true"|' "${config_file}"
+                sed -i 's|^EMAIL_ENABLED=.*|EMAIL_ENABLED="false"|' "${config_file}"
+                ;;
+            email)
+                sed -i 's|^TELEGRAM_ENABLED=.*|TELEGRAM_ENABLED="false"|' "${config_file}"
+                sed -i 's|^EMAIL_ENABLED=.*|EMAIL_ENABLED="true"|' "${config_file}"
+                ;;
+            both)
+                sed -i 's|^TELEGRAM_ENABLED=.*|TELEGRAM_ENABLED="true"|' "${config_file}"
+                sed -i 's|^EMAIL_ENABLED=.*|EMAIL_ENABLED="true"|' "${config_file}"
+                ;;
+            none)
+                sed -i 's|^TELEGRAM_ENABLED=.*|TELEGRAM_ENABLED="false"|' "${config_file}"
+                sed -i 's|^EMAIL_ENABLED=.*|EMAIL_ENABLED="false"|' "${config_file}"
+                ;;
+        esac
+    fi
+
+    # Telegram секреты
+    if [[ -n "${TG_BOT_TOKEN:-}" ]]; then
+        sed -i "s|^TELEGRAM_BOT_TOKEN=.*|TELEGRAM_BOT_TOKEN=\"${TG_BOT_TOKEN}\"|" "${config_file}"
+    fi
+    if [[ -n "${TG_CHAT_ID:-}" ]]; then
+        sed -i "s|^TELEGRAM_CHAT_ID=.*|TELEGRAM_CHAT_ID=\"${TG_CHAT_ID}\"|" "${config_file}"
+    fi
+
+    # SMTP секреты и параметры
+    if [[ -n "${SMTP_SERVER:-}" ]]; then
+        sed -i "s|^SMTP_SERVER=.*|SMTP_SERVER=\"${SMTP_SERVER}\"|" "${config_file}"
+    fi
+    if [[ -n "${SMTP_PORT:-}" ]]; then
+        sed -i "s|^SMTP_PORT=.*|SMTP_PORT=\"${SMTP_PORT}\"|" "${config_file}"
+    fi
+    if [[ -n "${SMTP_TLS:-}" ]]; then
+        sed -i "s|^SMTP_TLS=.*|SMTP_TLS=\"${SMTP_TLS}\"|" "${config_file}"
+    fi
+    if [[ -n "${SMTP_USERNAME:-}" ]]; then
+        sed -i "s|^SMTP_USER=.*|SMTP_USER=\"${SMTP_USERNAME}\"|" "${config_file}"
+    fi
+    if [[ -n "${SMTP_PASSWORD:-}" ]]; then
+        sed -i "s|^SMTP_PASS=.*|SMTP_PASS=\"${SMTP_PASSWORD}\"|" "${config_file}"
+    fi
+    if [[ -n "${SMTP_FROM:-}" ]]; then
+        sed -i "s|^SMTP_FROM=.*|SMTP_FROM=\"${SMTP_FROM}\"|" "${config_file}"
+    fi
+
+    # Защита прав: 600 гарантирует, что чужие пользователи сервера не прочтут токены
+    chmod 600 "${config_file}"
 
     log_success "Configuration deployment completed successfully."
 }
