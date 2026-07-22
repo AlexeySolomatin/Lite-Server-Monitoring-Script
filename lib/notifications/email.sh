@@ -11,6 +11,7 @@ set -Eeuo pipefail
 CONFIG_FILE="${NOTIFICATIONS_FILE:-/etc/lsm/notifications.conf}"
 
 [[ -f "${CONFIG_FILE}" ]] &&
+    # shellcheck source=/dev/null
     source "${CONFIG_FILE}"
 
 
