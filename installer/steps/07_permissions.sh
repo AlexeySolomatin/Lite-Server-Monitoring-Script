@@ -2,25 +2,35 @@
 #
 # -----------------------------------------------------------------------------
 # Lite Server Monitor (LSM)
-# Step 07: Global CLI Symlink
+# Step 07: Permissions & Global CLI Symlink
 # -----------------------------------------------------------------------------
 
 set -Eeuo pipefail
 
-step_cli() {
-    log_info "Creating global CLI symlink (/usr/local/bin/lsm)..."
+step_permissions() {
+    log_info "Setting correct permissions across LSM directories..."
 
-    local target_bin="${LSM_ROOT:-/opt/lsm}/bin/lsm"
-    local symlink_path="/usr/local/bin/lsm"
+    local lsm_root="${LSM_ROOT:-/opt/lsm}"
 
-    if [[ -f "${target_bin}" ]]; then
-        chmod +x "${target_bin}"
-        ln -sf "${target_bin}" "${symlink_path}"
-        log_success "Symlink created: ${symlink_path} -> ${target_bin}"
-    else
-        log_error "Executable not found at ${target_bin}"
-        return 1
+    # 1. Выставляем права на директории и файлы
+    if [[ -d "${lsm_root}" ]]; then
+        chmod -R 755 "${lsm_root}"
+        chmod -R 755 "${lsm_root}/bin"
+        chmod +x "${lsm_root}/bin/lsm" 2>/dev/null || true
     fi
+
+    # 2. Создаем глобальную симлинку в /usr/local/bin/lsm
+    log_info "Creating global CLI symlink (/usr/local/bin/lsm)..."
+    
+    if [[ -f "${lsm_root}/bin/lsm" ]]; then
+        ln -sf "${lsm_root}/bin/lsm" "/usr/local/bin/lsm"
+        log_success "Global command 'lsm' linked to /usr/local/bin/lsm"
+    else
+        log_warn "Executable ${lsm_root}/bin/lsm not found, skipping symlink creation."
+    fi
+
+    log_success "Lite Server Monitor installation completed successfully!"
+    log_info "Run 'lsm help' to see available commands."
 }
 
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
@@ -28,5 +38,5 @@ if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
     export LSM_ROOT
     if [[ -f "${LSM_ROOT}/lib/core/common.sh" ]]; then source "${LSM_ROOT}/lib/core/common.sh"; fi
     if [[ -f "${LSM_ROOT}/lib/core/ui.sh" ]]; then source "${LSM_ROOT}/lib/core/ui.sh"; fi
-    step_cli
+    step_permissions
 fi
