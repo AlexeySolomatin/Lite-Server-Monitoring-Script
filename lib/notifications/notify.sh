@@ -1,16 +1,22 @@
 #!/usr/bin/env bash
-#
-# -----------------------------------------------------------------------------
+# ==============================================================================
 # Lite Server Monitor (LSM)
-# Notification Dispatcher with Anti-Spam (Throttling) & Recovery Logic
-# -----------------------------------------------------------------------------
+# Диспетчер уведомлений с защитой от спама (Throttling) и логикой восстановления
+# Путь: lib/notifications/notify.sh
+# ==============================================================================
 
 set -Eeuo pipefail
+
+# Защита от повторной загрузки при подключении через source
+if [[ "${BASH_SOURCE[0]}" != "${0}" ]]; then
+    [[ -n "${LSM_NOTIFY_LOADED:-}" ]] && return 0
+    readonly LSM_NOTIFY_LOADED=1
+fi
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 
-# Подключаем базовые константы, если доступны
+# Подключаем базовые библиотеки, если они доступны
 if [[ -f "${PROJECT_ROOT}/lib/core/common.sh" ]]; then
     # shellcheck source=/dev/null
     source "${PROJECT_ROOT}/lib/core/common.sh"
@@ -26,40 +32,42 @@ if [[ -f "${CONFIG_FILE}" ]]; then
     # shellcheck source=/dev/null
     source "${CONFIG_FILE}"
 elif [[ -f "/etc/lsm/notifications.conf" ]]; then
-    # Резервный вариант на случай использования отдельного конфига
+    # Резервный вариант конфига
     # shellcheck source=/dev/null
     source "/etc/lsm/notifications.conf"
 fi
 
-# -----------------------------------------------------------------------------
+#
 # Внутренняя функция отправки во все включенные каналы
-# -----------------------------------------------------------------------------
+#
 dispatch_raw_notification() {
-    local subject="$1"
-    local message="$2"
+    local subject="${1:-}"
+    local message="${2:-}"
+
+    if declare -f log_info >/dev/null 2>&1; then
+        log_info "NOTIFY" "Отправка уведомления: ${subject}"
+    fi
 
     # Отправка в Telegram
     if [[ "${TELEGRAM_ENABLED:-false}" == "true" ]]; then
         if [[ -f "${SCRIPT_DIR}/telegram.sh" ]]; then
-            # shellcheck source=/dev/null
-            "${SCRIPT_DIR}/telegram.sh" "${subject}" "${message}" || true
+            bash "${SCRIPT_DIR}/telegram.sh" "${subject}" "${message}" || true
         fi
     fi
 
     # Отправка по Email
     if [[ "${EMAIL_ENABLED:-false}" == "true" ]]; then
         if [[ -f "${SCRIPT_DIR}/email.sh" ]]; then
-            # shellcheck source=/dev/null
-            "${SCRIPT_DIR}/email.sh" "${subject}" "${message}" || true
+            bash "${SCRIPT_DIR}/email.sh" "${subject}" "${message}" || true
         fi
     fi
 }
 
-# -----------------------------------------------------------------------------
+#
 # Главная функция обработки алертов
 # Использование: notify "имя_модуля" "УРОВЕНЬ" "Сообщение"
 # Уровень: OK | WARNING | CRITICAL
-# -----------------------------------------------------------------------------
+#
 notify() {
     local module="${1:-unknown}"
     local level="${2:-CRITICAL}"
@@ -80,7 +88,8 @@ notify() {
         if [[ -f "${state_file}" ]]; then
             rm -f "${state_file}"
             local subject="🟢 [RECOVERY] [${hostname}] Модуль: ${module}"
-            local full_msg="Проблема устранена, статус системы нормализовался.\n\nДетали:\n${message}"
+            local full_msg
+            printf -v full_msg "Проблема устранена, статус системы нормализовался.\n\nДетали:\n%s" "${message}"
             dispatch_raw_notification "${subject}" "${full_msg}"
         fi
         return 0
@@ -92,9 +101,14 @@ notify() {
 
     if [[ -f "${state_file}" ]]; then
         local state_data
-        state_data="$(cat "${state_file}")"
+        state_data="$(cat "${state_file}" 2>/dev/null || echo "")"
         local last_sent_time="${state_data%%|*}"
         local last_level="${state_data#*|}"
+
+        # Проверка корректности метки времени
+        if [[ ! "${last_sent_time}" =~ ^[0-9]+$ ]]; then
+            last_sent_time=0
+        fi
 
         local elapsed=$(( current_time - last_sent_time ))
 
@@ -105,6 +119,9 @@ notify() {
         # Если кулдаун ещё не истёк -> блокируем повторный алерт
         elif (( elapsed < ALERT_COOLDOWN )); then
             should_send=false
+            if declare -f log_debug >/dev/null 2>&1; then
+                log_debug "NOTIFY" "Алерт заблокирован кулдауном (${elapsed}s < ${ALERT_COOLDOWN}s) для модуля ${module}"
+            fi
         fi
     fi
 
@@ -118,7 +135,8 @@ notify() {
 
         local subject="${icon} [${level}] [${hostname}] Модуль: ${module}"
         local full_msg
-        full_msg="Обнаружена проблема на сервере ${hostname}.\n\nУровень: ${level}\nМодуль: ${module}\nВремя: $(date '+%Y-%m-%d %H:%M:%S')\n\nДетали:\n${message}"
+        printf -v full_msg "Обнаружена проблема на сервере %s.\n\nУровень: %s\nМодуль: %s\nВремя: %s\n\nДетали:\n%s" \
+            "${hostname}" "${level}" "${module}" "$(date '+%Y-%m-%d %H:%M:%S')" "${message}"
 
         dispatch_raw_notification "${subject}" "${full_msg}"
     fi
