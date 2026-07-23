@@ -1,10 +1,8 @@
 [Unit]
-Description=Lite Server Monitor (LSM) - Таймер проверки Docker
-Documentation=https://github.com/
+Description=Lite Server Monitor - Docker Check Timer
 
 [Timer]
-OnBootSec=5min
-OnUnitActiveSec=15min
+OnCalendar=*:0/15
 Persistent=true
 
 [Install]
