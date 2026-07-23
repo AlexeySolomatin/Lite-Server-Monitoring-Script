@@ -1,13 +1,11 @@
 #!/usr/bin/env bash
 # ==============================================================================
 # Lite Server Monitor (LSM)
-# Шаг 05: Установка модулей мониторинга
-# Путь: installer/steps/05_modules.sh
+# Step 05: Module Installation
+# Path: installer/steps/05_modules.sh
 # ==============================================================================
 
-
 set -Eeuo pipefail
-
 
 
 step_modules()
@@ -16,14 +14,13 @@ step_modules()
     log_info "Подготовка установки модулей..."
 
 
-
     #
-    # Проверка выбранных модулей
+    # Проверка выбора
     #
 
     if [[ -z "${SELECTED_MODULES+x}" ]]; then
 
-        log_error "Список выбранных модулей не определен."
+        log_error "Список модулей не определен."
 
         return 1
 
@@ -33,7 +30,7 @@ step_modules()
 
     if [[ ${#SELECTED_MODULES[@]} -eq 0 ]]; then
 
-        log_warn "Модули для установки не выбраны."
+        log_warn "Модули не выбраны."
 
         return 0
 
@@ -41,10 +38,12 @@ step_modules()
 
 
 
-    log_info "Выбранные модули:"
+    printf '%s\n' \
+        "Выбранные модули:"
 
 
-    printf ' - %s\n' "${SELECTED_MODULES[@]}"
+    printf ' - %s\n' \
+        "${SELECTED_MODULES[@]}"
 
 
 
@@ -53,9 +52,11 @@ step_modules()
     #
 
     local required_functions=(
-        "modules_install"
-        "module_validate_all"
         "module_loader_init"
+        "module_validate_all"
+        "modules_install"
+        "registry_resolve_order"
+        "registry_exists"
     )
 
 
@@ -66,7 +67,7 @@ step_modules()
         if ! declare -f "${func}" >/dev/null 2>&1; then
 
             log_error \
-                "Отсутствует API установки модулей: ${func}"
+            "Отсутствует API: ${func}"
 
             return 1
 
@@ -77,7 +78,7 @@ step_modules()
 
 
     #
-    # Инициализация загрузчика
+    # Инициализация
     #
 
     module_loader_init
@@ -85,54 +86,52 @@ step_modules()
 
 
     #
-    # Формирование порядка установки
+    # Проверка выбранных модулей
+    #
+
+    for module in "${SELECTED_MODULES[@]}"
+    do
+
+        if ! registry_exists "${module}"; then
+
+            log_error \
+            "Модуль отсутствует в registry: ${module}"
+
+            return 1
+
+        fi
+
+    done
+
+
+
+    #
+    # Resolve зависимостей
     #
 
     local install_order=()
 
 
 
-    if declare -f registry_resolve_order >/dev/null 2>&1; then
+    while read -r module
+    do
+
+        [[ -z "${module}" ]] && continue
+
+        install_order+=("${module}")
 
 
-        log_info "Определение порядка установки через registry..."
-
-
-
-        while read -r module
-        do
-
-            [[ -z "${module}" ]] && continue
-
-            install_order+=("${module}")
-
-
-        done < <(
-            registry_resolve_order "${SELECTED_MODULES[@]}"
-        )
-
-
-    else
-
-
-        log_warn \
-            "Registry порядка установки недоступен."
-
-        log_warn \
-            "Используется порядок выбора пользователя."
-
-
-        install_order=("${SELECTED_MODULES[@]}")
-
-
-    fi
+    done < <(
+        registry_resolve_order \
+        "${SELECTED_MODULES[@]}"
+    )
 
 
 
     if [[ ${#install_order[@]} -eq 0 ]]; then
 
         log_error \
-            "Не удалось сформировать порядок установки."
+        "Не удалось определить порядок установки."
 
         return 1
 
@@ -140,17 +139,15 @@ step_modules()
 
 
 
-    echo
-
     log_info "Порядок установки:"
 
-
-    printf ' -> %s\n' "${install_order[@]}"
+    printf ' -> %s\n' \
+        "${install_order[@]}"
 
 
 
     #
-    # Проверка и установка
+    # Установка
     #
 
     for module in "${install_order[@]}"
@@ -158,14 +155,14 @@ step_modules()
 
 
         log_info \
-            "Проверка модуля: ${module}"
+        "Проверка модуля: ${module}"
 
 
 
         if ! module_validate_all "${module}"; then
 
             log_error \
-                "Модуль ${module} не прошел проверку."
+            "Проверка модуля не пройдена: ${module}"
 
             return 1
 
@@ -174,14 +171,14 @@ step_modules()
 
 
         log_info \
-            "Установка модуля: ${module}"
+        "Установка модуля: ${module}"
 
 
 
         if ! modules_install "${module}"; then
 
             log_error \
-                "Ошибка установки модуля: ${module}"
+            "Ошибка установки: ${module}"
 
             return 1
 
@@ -190,22 +187,18 @@ step_modules()
 
 
         log_success \
-            "Модуль ${module} успешно установлен."
+        "Модуль ${module} установлен."
 
     done
 
 
 
     log_success \
-        "Все выбранные модули установлены."
+    "Все модули успешно установлены."
 
 }
 
 
-
-#
-# Автономный запуск
-#
 
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
 
@@ -215,20 +208,17 @@ if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
     export LSM_ROOT
 
 
-
     source "${LSM_ROOT}/lib/core/common.sh"
     source "${LSM_ROOT}/lib/core/logging.sh"
 
-    source "${LSM_ROOT}/lib/installer/modules.sh"
     source "${LSM_ROOT}/lib/installer/module_loader.sh"
     source "${LSM_ROOT}/lib/installer/module_validator.sh"
-
+    source "${LSM_ROOT}/lib/installer/modules.sh"
     source "${LSM_ROOT}/lib/installer/registry.sh"
 
 
 
     registry_load_default
-
 
 
     SELECTED_MODULES=("$@")
