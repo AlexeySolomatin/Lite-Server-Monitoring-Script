@@ -21,6 +21,8 @@ source "${LSM_ROOT}/lib/core/ui.sh"
 source "${LSM_ROOT}/lib/installer/deploy.sh"
 # shellcheck source=/dev/null
 source "${LSM_ROOT}/lib/installer/packages.sh"
+# shellcheck source=/dev/null
+source "${LSM_ROOT}/lib/installer/registry.sh"
 
 # 3. Инициализация версии проекта
 if [[ -f "${LSM_ROOT}/VERSION" ]]; then
