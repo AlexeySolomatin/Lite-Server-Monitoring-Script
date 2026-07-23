@@ -5,14 +5,14 @@
 # -----------------------------------------------------------------------------
 
 [Unit]
-Description=Run Lite Server Monitor Disk Check
+Description=Lite Server Monitor (LSM) - Таймер проверки дискового пространства
+Documentation=https://github.com/AlexeySolomatin/Lite-Server-Monitor
 
 [Timer]
-OnBootSec=2min
-OnUnitActiveSec=5min
-AccuracySec=30s
+# Запуск каждые 5 минут
+OnCalendar=*:0/5
 Persistent=true
-
+RandomizedDelaySec=15
 Unit=lsm-disk.service
 
 [Install]
