@@ -94,7 +94,7 @@ case "${COMMAND}" in
 
     tui)
 
-        exec "${LSM_ROOT}/commands/tui.sh"
+        exec "${LSM_ROOT}/commands/tui.sh" "${@:2}"
 
     ;;
 
