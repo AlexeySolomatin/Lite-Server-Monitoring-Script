@@ -1,11 +1,15 @@
 #!/usr/bin/env bash
-#
-# -----------------------------------------------------------------------------
+# ==============================================================================
 # Lite Server Monitor (LSM)
-# Core UI & Terminal Formatting Helpers
-# -----------------------------------------------------------------------------
+# Библиотека пользовательского интерфейса и форматирования терминала
+# Путь: lib/core/ui.sh
+# ==============================================================================
 
 set -Eeuo pipefail
+
+# Защита от повторного подключения файла
+[[ -n "${LSM_UI_LOADED:-}" ]] && return 0
+readonly LSM_UI_LOADED=1
 
 # Автоопределение версии из файла VERSION (если PROJECT_VERSION еще не задана)
 if [[ -z "${PROJECT_VERSION:-}" ]]; then
@@ -19,7 +23,7 @@ if [[ -z "${PROJECT_VERSION:-}" ]]; then
 fi
 
 # Определение цветов (ANSI-C quoting гарантирует работу с 'cat' и 'echo')
-if [[ -t 1 ]]; then
+if [[ -t 1 && -z "${NO_COLOR:-}" ]]; then
     COLOR_RESET=$'\033[0m'
     COLOR_BOLD=$'\033[1m'
     COLOR_RED=$'\033[0;31m'
@@ -38,10 +42,6 @@ else
 fi
 
 # Вывод баннера проекта
-ui_banner() {
-    print_header
-}
-
 print_header() {
     cat << EOF
 
@@ -55,9 +55,14 @@ ${COLOR_CYAN}${COLOR_BOLD}======================================================
 EOF
 }
 
+# Алиас для вывода баннера
+ui_banner() {
+    print_header
+}
+
 # Визуальное разделение блоков
 ui_section() {
-    local title="$1"
+    local title="${1:-}"
     echo -e "\n${COLOR_BOLD}---> ${title}${COLOR_RESET}"
 }
 
@@ -66,25 +71,25 @@ print_section() {
     ui_section "$@"
 }
 
-# Форматирование сообщений с иконками
+# Форматирование сообщений с иконками и цветовым статусом
 log_info() {
-    echo "[${COLOR_BLUE}INFO${COLOR_RESET}] $*"
+    echo -e "[${COLOR_BLUE}INFO${COLOR_RESET}] $*"
 }
 
 log_success() {
-    echo "[${COLOR_GREEN} OK ${COLOR_RESET}] $*"
+    echo -e "[${COLOR_GREEN} OK ${COLOR_RESET}] $*"
 }
 
 log_warn() {
-    echo "[${COLOR_YELLOW}WARN${COLOR_RESET}] $*" >&2
+    echo -e "[${COLOR_YELLOW}WARN${COLOR_RESET}] $*" >&2
 }
 
 log_error() {
-    echo "[${COLOR_RED}FAIL${COLOR_RESET}] $*" >&2
+    echo -e "[${COLOR_RED}FAIL${COLOR_RESET}] $*" >&2
 }
 
 log_debug() {
     if [[ "${LSM_DEBUG:-0}" == "1" ]]; then
-        echo "[${COLOR_CYAN}DEBUG${COLOR_RESET}] $*"
+        echo -e "[${COLOR_CYAN}DEBUG${COLOR_RESET}] $*"
     fi
 }
