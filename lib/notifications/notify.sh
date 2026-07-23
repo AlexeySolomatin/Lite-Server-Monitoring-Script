@@ -17,14 +17,18 @@ if [[ -f "${PROJECT_ROOT}/lib/core/common.sh" ]]; then
 fi
 
 # Значения по умолчанию
-STATE_DIR="${STATE_DIR:-/var/lib/lsm}/state"
+STATE_DIR="${STATE_DIR:-/var/lib/lsm/state}"
 ALERT_COOLDOWN="${ALERT_COOLDOWN:-3600}"
 
-# Загружаем конфигурацию уведомлений
-CONFIG_FILE="${NOTIFICATIONS_FILE:-/etc/lsm/notifications.conf}"
+# Загрузка единого конфигурационного файла LSM
+CONFIG_FILE="${LSM_CONFIG:-/etc/lsm/config.conf}"
 if [[ -f "${CONFIG_FILE}" ]]; then
     # shellcheck source=/dev/null
     source "${CONFIG_FILE}"
+elif [[ -f "/etc/lsm/notifications.conf" ]]; then
+    # Резервный вариант на случай использования отдельного конфига
+    # shellcheck source=/dev/null
+    source "/etc/lsm/notifications.conf"
 fi
 
 # -----------------------------------------------------------------------------
