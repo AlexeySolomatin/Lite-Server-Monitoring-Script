@@ -115,3 +115,49 @@ tui_info()
         "$1"
 
 }
+
+tui_clear()
+{
+    clear
+}
+
+
+tui_title()
+{
+    echo
+    echo "======================================"
+    echo "$1"
+    echo "======================================"
+    echo
+}
+
+
+tui_section()
+{
+    echo
+    echo "--- $1 ---"
+}
+
+
+tui_success()
+{
+    echo "[ OK ] $1"
+}
+
+
+tui_error()
+{
+    echo "[ ОШИБКА ] $1"
+}
+
+
+tui_warning()
+{
+    echo "[ ВНИМАНИЕ ] $1"
+}
+
+
+tui_pause()
+{
+    read -rp "Нажмите Enter..."
+}
