@@ -1,17 +1,19 @@
 #!/usr/bin/env bash
-#
 # ==============================================================================
 # Lite Server Monitor (LSM)
 # Реестр компонентов установки
 # Путь: lib/installer/registry.sh
 # ==============================================================================
 
+set -Eeuo pipefail
 
-[[ -n "${LSM_INSTALL_REGISTRY_LOADED:-}" ]] && return
+[[ -n "${LSM_INSTALL_REGISTRY_LOADED:-}" ]] && return 0
 readonly LSM_INSTALL_REGISTRY_LOADED=1
 
 
-declare -A LSM_COMPONENTS
+declare -A LSM_COMPONENTS_NAME
+declare -A LSM_COMPONENTS_DESC
+declare -A LSM_COMPONENTS_ENABLED
 
 
 #
@@ -19,118 +21,137 @@ declare -A LSM_COMPONENTS
 #
 registry_add() {
 
-    local name="$1"
-    local description="$2"
-    local default="$3"
+    local id="$1"
+    local name="${2:-$1}"
+    local description="${3:-}"
 
-    LSM_COMPONENTS["${name}"]="${description}|${default}"
+    LSM_COMPONENTS_NAME["${id}"]="${name}"
+    LSM_COMPONENTS_DESC["${id}"]="${description}"
+    LSM_COMPONENTS_ENABLED["${id}"]="false"
 
 }
 
 
 #
-# Получение всех компонентов
+# Получить список компонентов
 #
 registry_list() {
 
-    printf "%s\n" "${!LSM_COMPONENTS[@]}"
+    printf "%s\n" "${!LSM_COMPONENTS_NAME[@]}"
 
 }
 
 
 #
-# Проверка существования
+# Проверка наличия
 #
 registry_exists() {
 
-    local name="$1"
+    local id="$1"
 
-    [[ -n "${LSM_COMPONENTS[$name]:-}" ]]
-
-}
-
-
-#
-# Получить описание
-#
-registry_description() {
-
-    local name="$1"
-
-    echo "${LSM_COMPONENTS[$name]%%|*}"
+    [[ -n "${LSM_COMPONENTS_NAME[$id]:-}" ]]
 
 }
 
 
 #
-# Получить значение default
+# Включить компонент
 #
-registry_default() {
+registry_enable() {
 
-    local name="$1"
+    local id="$1"
 
-    echo "${LSM_COMPONENTS[$name]##*|}"
+    if registry_exists "${id}"; then
+        LSM_COMPONENTS_ENABLED["${id}"]="true"
+    fi
 
 }
 
 
 #
-# Стандартный набор компонентов
+# Выключить компонент
+#
+registry_disable() {
+
+    local id="$1"
+
+    if registry_exists "${id}"; then
+        LSM_COMPONENTS_ENABLED["${id}"]="false"
+    fi
+
+}
+
+
+#
+# Проверка выбран
+#
+registry_is_enabled() {
+
+    local id="$1"
+
+    [[ "${LSM_COMPONENTS_ENABLED[$id]:-false}" == "true" ]]
+
+}
+
+
+#
+# Загрузка стандартного набора
 #
 registry_load_default() {
 
 
     registry_add \
         "system" \
-        "Мониторинг состояния системы" \
-        "yes"
+        "Система" \
+        "CPU, RAM, нагрузка"
 
 
     registry_add \
         "disk" \
-        "Контроль дискового пространства" \
-        "yes"
+        "Диски" \
+        "Свободное место"
 
 
     registry_add \
         "smart" \
-        "SMART контроль накопителей" \
-        "yes"
+        "SMART" \
+        "Состояние HDD/SSD"
 
 
     registry_add \
         "temperature" \
-        "Контроль температуры оборудования" \
-        "yes"
+        "Температура" \
+        "Контроль температуры"
 
 
     registry_add \
         "raid" \
-        "Контроль RAID массива" \
-        "yes"
+        "RAID" \
+        "Состояние mdadm"
 
 
     registry_add \
         "ups" \
-        "Мониторинг UPS" \
-        "no"
+        "ИБП" \
+        "Контроль APC UPS"
 
 
     registry_add \
         "login" \
-        "Контроль входов пользователей" \
-        "yes"
+        "Входы" \
+        "SSH авторизация"
 
 
     registry_add \
         "fail2ban" \
-        "Контроль защиты Fail2Ban" \
-        "yes"
+        "Fail2Ban" \
+        "Блокировки"
 
 
     registry_add \
         "core" \
-        "Служебные функции LSM" \
-        "yes"
+        "Ядро LSM" \
+        "Служебные компоненты"
+
 
 }
