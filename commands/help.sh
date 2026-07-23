@@ -1,33 +1,119 @@
 #!/usr/bin/env bash
-#
-# -----------------------------------------------------------------------------
+# ==============================================================================
 # Lite Server Monitor (LSM)
-# Help Command
-# -----------------------------------------------------------------------------
+# Справка команд CLI
+# Путь: commands/help.sh
+# ==============================================================================
+
 
 set -Eeuo pipefail
 
+
+
 cat <<EOF
+
 
 Lite Server Monitor (LSM)
 
-Usage:
+Система мониторинга Linux серверов
 
-    lsm <command>
 
-Commands:
+Использование:
 
-    install       Install Lite Server Monitor
-    uninstall     Remove Lite Server Monitor
-    update        Update Lite Server Monitor
+  lsm <команда>
 
-    status        Show current status
-    modules       List available modules
-    report        Generate health report
-    doctor        Diagnose installation
-    config        Configure LSM
 
-    version       Show version
-    help          Show this help
+
+Основные команды:
+
+
+  install
+
+      Установка LSM
+
+
+
+  uninstall
+
+      Удаление LSM
+
+
+
+  update
+
+      Обновление компонентов
+
+
+
+  status
+
+      Текущее состояние системы
+
+
+
+  doctor
+
+      Диагностика установки
+
+
+
+  report
+
+      Формирование отчетов
+
+
+
+  config
+
+      Управление конфигурацией
+
+
+
+  modules
+
+      Управление модулями
+
+
+
+  version
+
+      Версия системы
+
+
+
+Управление модулями:
+
+
+  lsm modules list
+
+      Установленные модули
+
+
+  lsm modules available
+
+      Все доступные модули
+
+
+  lsm modules info <module>
+
+      Информация о модуле
+
+
+  lsm modules install <module>
+
+      Установка модуля
+
+
+  lsm modules remove <module>
+
+      Удаление модуля
+
+
+
+Пример:
+
+
+  lsm modules info smart
+
 
 EOF
