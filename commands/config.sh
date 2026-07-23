@@ -1,17 +1,23 @@
 #!/usr/bin/env bash
 #
-# -----------------------------------------------------------------------------
+# ==============================================================================
 # Lite Server Monitor (LSM)
-# Configuration Command
-# -----------------------------------------------------------------------------
+# Команда управления конфигурацией
+# ==============================================================================
 
 set -Eeuo pipefail
 
 CONFIG_DIR="/etc/lsm"
 
-echo
-echo "Configuration files"
-echo "==================="
-echo
+# Подключение библиотеки логирования
+if [[ -f "${LSM_ROOT:-/opt/lsm}/lib/core/logging.sh" ]]; then
+    # shellcheck source=/dev/null
+    source "${LSM_ROOT:-/opt/lsm}/lib/core/logging.sh"
+fi
 
-find "${CONFIG_DIR}" -type f | sort
+log_info "Конфигурационные файлы системы"
+log_info "=============================="
+
+find "${CONFIG_DIR}" -type f | sort | while read -r file; do
+    log_success "Конфигурационный файл: ${file}"
+done
