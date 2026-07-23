@@ -6,7 +6,9 @@
 # SMTP Configuration Screen
 # -----------------------------------------------------------------------------
 
-EMAIL_ENABLED="false"
+set -Eeuo pipefail
+
+EMAIL_ENABLED="true"
 SMTP_PROFILE=""
 SMTP_SERVER=""
 SMTP_PORT=""
@@ -19,28 +21,20 @@ ALERT_EMAIL=""
 screen_smtp() {
     wizard_header
 
-    echo "SMTP Email Configuration"
+    echo -e "${CLR_BOLD}Настройка отправки Email (SMTP):${CLR_RESET}"
+    echo "Укажите параметры подключения к почтовому серверу для отправки отчетов и алертов."
     echo
 
-    read -rp "Enable Email Notifications? [y/N]: " enable_choice
-    case "${enable_choice}" in
-        [Yy]* )
-            EMAIL_ENABLED="true"
-            ;;
-        * )
-            EMAIL_ENABLED="false"
-            return 0
-            ;;
-    esac
+    EMAIL_ENABLED="true"
 
-    echo
-    echo "1) Gmail (port 587, STARTTLS)"
-    echo "2) Yandex (port 465, SSL)"
-    echo "3) Manual Setup"
+    echo -e "  ${CLR_CYAN}1)${CLR_RESET} Gmail (port 587, STARTTLS)"
+    echo -e "  ${CLR_CYAN}2)${CLR_RESET} Yandex (port 465, SSL/TLS)"
+    echo -e "  ${CLR_CYAN}3)${CLR_RESET} Ручная настройка (Custom SMTP)"
     echo
 
     while true; do
-        read -rp "Select profile [1-3]: " answer
+        read -rp "$(echo -e "${CLR_BOLD}Выберите провайдера [1-3]${CLR_RESET} [${CLR_YELLOW}1${CLR_RESET}]: ")" answer
+        answer="${answer:-1}"
 
         case "${answer}" in
             1)
@@ -50,7 +44,6 @@ screen_smtp() {
                 SMTP_TLS="on"
                 break
                 ;;
-
             2)
                 SMTP_PROFILE="yandex"
                 SMTP_SERVER="smtp.yandex.ru"
@@ -58,32 +51,50 @@ screen_smtp() {
                 SMTP_TLS="on"
                 break
                 ;;
-
             3)
                 SMTP_PROFILE="manual"
-                read -rp "SMTP Server: " SMTP_SERVER
-                read -rp "SMTP Port [587]: " SMTP_PORT
-                SMTP_PORT="${SMTP_PORT:-587}"
-                read -rp "Use TLS (on/off) [on]: " SMTP_TLS
-                SMTP_TLS="${SMTP_TLS:-on}"
+                wizard_input "SMTP Сервер" "SMTP_SERVER"
+                wizard_input "SMTP Порт" "SMTP_PORT" "587"
+                wizard_input "Использовать TLS (on/off)" "SMTP_TLS" "on"
                 break
                 ;;
-
             *)
-                echo "Invalid choice. Please select 1, 2, or 3."
+                echo -e "${CLR_RED}Неверный выбор. Пожалуйста, введите 1, 2 или 3.${CLR_RESET}"
                 ;;
         esac
     done
 
     echo
 
-    read -rp "Username (e.g. lsm-bot@yandex.ru): " SMTP_USER
-    read -rsp "Password (App Password): " SMTP_PASS
-    echo
-    echo
+    # Запрос логина (Email)
+    SMTP_USER=""
+    while [[ -z "${SMTP_USER}" ]]; do
+        wizard_input "Имя пользователя (Логин / Email)" "SMTP_USER"
+        if [[ -z "${SMTP_USER}" ]]; then
+            echo -e "${CLR_RED}Логин не может быть пустым. Попробуйте снова.${CLR_RESET}"
+        fi
+    done
 
-    read -rp "Sender email [${SMTP_USER}]: " SMTP_FROM
-    SMTP_FROM="${SMTP_FROM:-$SMTP_USER}"
+    # Скрытый запрос пароля приложения
+    SMTP_PASS=""
+    while [[ -z "${SMTP_PASS}" ]]; do
+        wizard_mask_input "Пароль приложения (App Password)" "SMTP_PASS"
+        if [[ -z "${SMTP_PASS}" ]]; then
+            echo -e "${CLR_RED}Пароль не может быть пустым. Попробуйте снова.${CLR_RESET}"
+        fi
+    done
 
-    read -rp "Recipient email (ALERT_EMAIL): " ALERT_EMAIL
+    # Email отправителя и получателя
+    wizard_input "Email отправителя" "SMTP_FROM" "${SMTP_USER}"
+
+    ALERT_EMAIL=""
+    while [[ -z "${ALERT_EMAIL}" ]]; do
+        wizard_input "Email получателя алертов" "ALERT_EMAIL" "${SMTP_USER}"
+        if [[ -z "${ALERT_EMAIL}" ]]; then
+            echo -e "${CLR_RED}Email получателя не может быть пустым. Попробуйте снова.${CLR_RESET}"
+        fi
+    done
+
+    echo
+    echo -e "${CLR_GREEN}✓ Параметры Email (SMTP) успешно сохранены.${CLR_RESET}"
 }
