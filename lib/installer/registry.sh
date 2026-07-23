@@ -134,7 +134,9 @@ registry_scan()
 #
 registry_load_default()
 {
-    registry_scan
+
+    registry_register_modules
+
 }
 
 
@@ -334,5 +336,30 @@ registry_resolve_module()
 
 
     output+=("${module}")
+
+}
+
+registry_register_modules()
+{
+
+    local modules_dir="${LSM_ROOT}/modules"
+
+
+    [[ -d "${modules_dir}" ]] || return
+
+
+    while read -r module
+    do
+
+        registry_add "${module}"
+
+    done < <(
+        find "${modules_dir}" \
+        -mindepth 1 \
+        -maxdepth 1 \
+        -type d \
+        -printf "%f\n" \
+        | sort
+    )
 
 }
