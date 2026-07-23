@@ -1,6 +1,5 @@
 [Unit]
 Description=Lite Server Monitor (LSM) - Служба ежедневного отчета
-Documentation=https://github.com/
 After=network.target local-fs.target
 
 [Service]
