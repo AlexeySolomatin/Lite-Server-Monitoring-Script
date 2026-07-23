@@ -9,6 +9,11 @@
 set -Eeuo pipefail
 
 
+[[ -n "${LSM_TUI_SCREEN_MODULES_LOADED:-}" ]] && return 0
+readonly LSM_TUI_SCREEN_MODULES_LOADED=1
+
+
+
 #
 # Загрузка API модулей
 #
@@ -21,86 +26,33 @@ fi
 
 
 #
-# Экран списка модулей
+# Показ списка модулей
 #
 
-screen_modules()
+screen_modules_list()
 {
 
-    tui_clear
-
-    tui_title "Управление модулями LSM"
-
-
-    echo
-
-
-    if ! declare -f modules_list >/dev/null 2>&1; then
-
-        tui_error "API управления модулями недоступно."
-
-        tui_pause
-
-        return 1
-
-    fi
-
-
-
     local modules
+
 
     modules="$(modules_list || true)"
 
 
-
     if [[ -z "${modules}" ]]; then
 
-        tui_warning "Модули не найдены."
+        tui_message \
+            "Модули LSM" \
+            "Доступные модули отсутствуют."
 
-    else
-
-        tui_section "Доступные модули"
-
-        echo "${modules}"
+        return
 
     fi
 
 
-    echo
 
-
-    tui_menu \
-        "Установить модуль" \
-        "Удалить модуль" \
-        "Назад"
-
-
-
-    case "${TUI_MENU_RESULT}" in
-
-
-        1)
-
-            screen_modules_install
-
-            ;;
-
-
-        2)
-
-            screen_modules_remove
-
-            ;;
-
-
-        3)
-
-            return 0
-
-            ;;
-
-
-    esac
+    tui_message \
+        "Модули LSM" \
+        "${modules}"
 
 }
 
@@ -113,38 +65,37 @@ screen_modules()
 screen_modules_install()
 {
 
-    tui_clear
-
-    tui_title "Установка модуля"
+    local module
 
 
-    read -rp "Имя модуля: " module
+    module="$(
+        dialog \
+            --clear \
+            --title "Установка модуля" \
+            --inputbox "Введите имя модуля:" \
+            10 60 \
+            3>&1 1>&2 2>&3
+    )"
 
 
-    if [[ -z "${module}" ]]; then
 
-        tui_error "Имя модуля не указано."
-
-        tui_pause
-
-        return
-
-    fi
+    [[ -z "${module}" ]] && return
 
 
 
     if modules_install "${module}"; then
 
-        tui_success "Модуль ${module} установлен."
+        tui_message \
+            "Установка завершена" \
+            "Модуль '${module}' успешно установлен."
 
     else
 
-        tui_error "Ошибка установки модуля ${module}."
+        tui_message \
+            "Ошибка" \
+            "Не удалось установить модуль '${module}'."
 
     fi
-
-
-    tui_pause
 
 }
 
@@ -157,37 +108,107 @@ screen_modules_install()
 screen_modules_remove()
 {
 
+    local module
+
+
+    module="$(
+        dialog \
+            --clear \
+            --title "Удаление модуля" \
+            --inputbox "Введите имя модуля:" \
+            10 60 \
+            3>&1 1>&2 2>&3
+    )"
+
+
+
+    [[ -z "${module}" ]] && return
+
+
+
+    if tui_confirm "Удалить модуль '${module}'?"; then
+
+
+        if modules_remove "${module}"; then
+
+            tui_message \
+                "Удаление завершено" \
+                "Модуль '${module}' удален."
+
+        else
+
+            tui_message \
+                "Ошибка" \
+                "Не удалось удалить модуль '${module}'."
+
+        fi
+
+    fi
+
+}
+
+
+
+#
+# Основной экран
+#
+
+screen_modules()
+{
+
+
+while true
+do
+
+
     tui_clear
 
-    tui_title "Удаление модуля"
 
-
-    read -rp "Имя модуля: " module
-
-
-    if [[ -z "${module}" ]]; then
-
-        tui_error "Имя модуля не указано."
-
-        tui_pause
-
-        return
-
-    fi
+    tui_menu_create \
+        "Модули LSM" \
+        "Управление компонентами мониторинга" \
+        1 "Список модулей" \
+        2 "Установить модуль" \
+        3 "Удалить модуль" \
+        0 "Назад"
 
 
 
-    if modules_remove "${module}"; then
-
-        tui_success "Модуль ${module} удален."
-
-    else
-
-        tui_error "Ошибка удаления модуля ${module}."
-
-    fi
+    case "${TUI_MENU_RESULT}" in
 
 
-    tui_pause
+        1)
+
+            screen_modules_list
+
+        ;;
+
+
+        2)
+
+            screen_modules_install
+
+        ;;
+
+
+        3)
+
+            screen_modules_remove
+
+        ;;
+
+
+        0|*)
+
+            break
+
+        ;;
+
+
+    esac
+
+
+done
+
 
 }
