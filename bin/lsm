@@ -1,42 +1,71 @@
 #!/usr/bin/env bash
-#
-# -----------------------------------------------------------------------------
+# ==============================================================================
 # Lite Server Monitor (LSM)
-# Main CLI Executable
-# -----------------------------------------------------------------------------
+# Главный исполняемый CLI-файл управления
+# Путь: bin/lsm (или /usr/local/bin/lsm)
+# ==============================================================================
 
 set -Eeuo pipefail
 
-# Определение рабочей директории
-LSM_ROOT="${LSM_ROOT:-/opt/lsm}"
+# Автоматическое определение корневой директории проекта
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+if [[ -z "${LSM_ROOT:-}" ]]; then
+    if [[ -d "${SCRIPT_DIR}/../commands" ]]; then
+        LSM_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
+    else
+        LSM_ROOT="/opt/lsm"
+    fi
+fi
 export LSM_ROOT
 
-# Подключение базовых библиотек
+# Подключение базовых библиотек ядра
 if [[ -f "${LSM_ROOT}/lib/core/common.sh" ]]; then
+    # shellcheck source=/dev/null
     source "${LSM_ROOT}/lib/core/common.sh"
 fi
 
 if [[ -f "${LSM_ROOT}/lib/core/ui.sh" ]]; then
+    # shellcheck source=/dev/null
     source "${LSM_ROOT}/lib/core/ui.sh"
 fi
 
-# Извлечение команды и оставшихся аргументов
+# Извлечение команды и обработка стандартных флагов
 COMMAND="${1:-help}"
+
+case "${COMMAND}" in
+    -h|--help)
+        COMMAND="help"
+        ;;
+    -v|--version)
+        COMMAND="version"
+        ;;
+esac
+
+# Сдвигаем аргументы, передавая скрипту команды только его параметры
 if [[ $# -gt 0 ]]; then
     shift
 fi
 
 COMMAND_SCRIPT="${LSM_ROOT}/commands/${COMMAND}.sh"
 
-# Маршрутизация выполнения
+# Маршрутизация выполнения команды
 if [[ -f "${COMMAND_SCRIPT}" ]]; then
     exec bash "${COMMAND_SCRIPT}" "$@"
 else
     if declare -f log_error >/dev/null 2>&1; then
-        log_error "Unknown command: '${COMMAND}'"
+        log_error "CLI" "Неизвестная команда: '${COMMAND}'"
     else
-        echo "Error: Unknown command '${COMMAND}'" >&2
+        echo "Ошибка: Неизвестная команда '${COMMAND}'" >&2
     fi
     echo ""
-    exec bash "${LSM_ROOT}/commands/help.sh"
+
+    HELP_SCRIPT="${LSM_ROOT}/commands/help.sh"
+    if [[ -f "${HELP_SCRIPT}" ]]; then
+        exec bash "${HELP_SCRIPT}"
+    else
+        echo "Использование: lsm <команда> [параметры]" >&2
+        echo "Запустите 'lsm help' для получения списка доступных команд." >&2
+        exit 1
+    fi
 fi
