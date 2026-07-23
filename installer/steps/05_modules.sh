@@ -8,19 +8,23 @@
 set -Eeuo pipefail
 
 
+
 step_modules()
 {
 
-    log_info "Подготовка установки модулей..."
+    log_info \
+        "Подготовка установки модулей..."
+
 
 
     #
-    # Проверка выбора
+    # Проверка выбора пользователя
     #
 
     if [[ -z "${SELECTED_MODULES+x}" ]]; then
 
-        log_error "Список модулей не определен."
+        log_error \
+            "Список модулей SELECTED_MODULES не определен."
 
         return 1
 
@@ -30,7 +34,8 @@ step_modules()
 
     if [[ ${#SELECTED_MODULES[@]} -eq 0 ]]; then
 
-        log_warn "Модули не выбраны."
+        log_warn \
+            "Модули для установки не выбраны."
 
         return 0
 
@@ -38,7 +43,7 @@ step_modules()
 
 
 
-    printf '%s\n' \
+    log_info \
         "Выбранные модули:"
 
 
@@ -56,7 +61,6 @@ step_modules()
         "module_validate_all"
         "modules_install"
         "registry_resolve_order"
-        "registry_exists"
     )
 
 
@@ -67,7 +71,7 @@ step_modules()
         if ! declare -f "${func}" >/dev/null 2>&1; then
 
             log_error \
-            "Отсутствует API: ${func}"
+                "Отсутствует API установки модулей: ${func}"
 
             return 1
 
@@ -78,35 +82,22 @@ step_modules()
 
 
     #
-    # Инициализация
+    # Инициализация загрузчика
     #
 
-    module_loader_init
+    if ! module_loader_init; then
 
+        log_error \
+            "Не удалось инициализировать загрузчик модулей."
 
+        return 1
 
-    #
-    # Проверка выбранных модулей
-    #
-
-    for module in "${SELECTED_MODULES[@]}"
-    do
-
-        if ! registry_exists "${module}"; then
-
-            log_error \
-            "Модуль отсутствует в registry: ${module}"
-
-            return 1
-
-        fi
-
-    done
+    fi
 
 
 
     #
-    # Resolve зависимостей
+    # Разрешение зависимостей
     #
 
     local install_order=()
@@ -118,12 +109,13 @@ step_modules()
 
         [[ -z "${module}" ]] && continue
 
+
         install_order+=("${module}")
 
 
     done < <(
         registry_resolve_order \
-        "${SELECTED_MODULES[@]}"
+            "${SELECTED_MODULES[@]}"
     )
 
 
@@ -131,7 +123,7 @@ step_modules()
     if [[ ${#install_order[@]} -eq 0 ]]; then
 
         log_error \
-        "Не удалось определить порядок установки."
+            "Не удалось сформировать порядок установки модулей."
 
         return 1
 
@@ -139,7 +131,9 @@ step_modules()
 
 
 
-    log_info "Порядок установки:"
+    log_info \
+        "Порядок установки:"
+
 
     printf ' -> %s\n' \
         "${install_order[@]}"
@@ -147,7 +141,7 @@ step_modules()
 
 
     #
-    # Установка
+    # Проверка и установка
     #
 
     for module in "${install_order[@]}"
@@ -155,14 +149,14 @@ step_modules()
 
 
         log_info \
-        "Проверка модуля: ${module}"
+            "Проверка модуля: ${module}"
 
 
 
         if ! module_validate_all "${module}"; then
 
             log_error \
-            "Проверка модуля не пройдена: ${module}"
+                "Модуль не прошел проверку: ${module}"
 
             return 1
 
@@ -171,14 +165,14 @@ step_modules()
 
 
         log_info \
-        "Установка модуля: ${module}"
+            "Установка модуля: ${module}"
 
 
 
         if ! modules_install "${module}"; then
 
             log_error \
-            "Ошибка установки: ${module}"
+                "Ошибка установки модуля: ${module}"
 
             return 1
 
@@ -187,18 +181,23 @@ step_modules()
 
 
         log_success \
-        "Модуль ${module} установлен."
+            "Модуль установлен: ${module}"
+
 
     done
 
 
 
     log_success \
-    "Все модули успешно установлены."
+        "Все выбранные модули успешно установлены."
 
 }
 
 
+
+#
+# Автономный запуск
+#
 
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
 
@@ -208,8 +207,10 @@ if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
     export LSM_ROOT
 
 
+
     source "${LSM_ROOT}/lib/core/common.sh"
     source "${LSM_ROOT}/lib/core/logging.sh"
+
 
     source "${LSM_ROOT}/lib/installer/module_loader.sh"
     source "${LSM_ROOT}/lib/installer/module_validator.sh"
@@ -219,6 +220,7 @@ if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
 
 
     registry_load_default
+
 
 
     SELECTED_MODULES=("$@")
