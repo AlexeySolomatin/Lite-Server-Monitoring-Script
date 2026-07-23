@@ -9,14 +9,13 @@
 set -Eeuo pipefail
 
 
-
 [[ -n "${LSM_MODULES_LOADED:-}" ]] && return 0
 readonly LSM_MODULES_LOADED=1
 
 
 
 #
-# Пути
+# Paths
 #
 
 LSM_ROOT="${LSM_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
@@ -30,7 +29,7 @@ LSM_MODULE_STATE_DIR="${LSM_MODULE_STATE_DIR:-${LSM_STATE_DIR}/modules}"
 
 
 #
-# Проверка существования
+# Module exists
 #
 
 modules_exists()
@@ -49,34 +48,36 @@ modules_exists()
 
 
 #
-# Путь модуля
+# Module path
 #
 
 modules_path()
 {
 
-    echo "${LSM_MODULES_DIR}/${1}"
+    local module="$1"
+
+
+    echo "${LSM_MODULES_DIR}/${module}"
 
 }
 
 
 
 #
-# Проверка состояния
+# State
 #
 
 modules_is_installed()
 {
 
-    [[ -f "${LSM_MODULE_STATE_DIR}/${1}.installed" ]]
+    local module="$1"
+
+
+    [[ -f "${LSM_MODULE_STATE_DIR}/${module}.installed" ]]
 
 }
 
 
-
-#
-# Сохранение состояния
-#
 
 modules_mark_installed()
 {
@@ -88,30 +89,28 @@ modules_mark_installed()
 
 
 
-    local version="unknown"
+    date '+%Y-%m-%d %H:%M:%S' \
+        > "${LSM_MODULE_STATE_DIR}/${module}.installed"
+
+}
 
 
 
-    if declare -f module_get_version >/dev/null 2>&1; then
+modules_clear_state()
+{
 
-        version=$(module_get_version "${module}")
-
-    fi
-
+    local module="$1"
 
 
-    cat > "${LSM_MODULE_STATE_DIR}/${module}.installed" <<EOF
-MODULE=${module}
-VERSION=${version}
-DATE=$(date '+%Y-%m-%d %H:%M:%S')
-EOF
+    rm -f \
+        "${LSM_MODULE_STATE_DIR}/${module}.installed"
 
 }
 
 
 
 #
-# Установка модуля
+# Install
 #
 
 modules_install()
@@ -123,7 +122,8 @@ modules_install()
 
     if [[ -z "${module}" ]]; then
 
-        log_error "Имя модуля не указано."
+        log_error \
+            "Имя модуля не указано"
 
         return 1
 
@@ -134,7 +134,7 @@ modules_install()
     if ! modules_exists "${module}"; then
 
         log_error \
-            "Модуль отсутствует: ${module}"
+            "Модуль не найден: ${module}"
 
         return 1
 
@@ -142,34 +142,10 @@ modules_install()
 
 
 
-    #
-    # Проверка валидности
-    #
-
-    if declare -f module_validate_all >/dev/null 2>&1; then
-
-
-        if ! module_validate_all "${module}"; then
-
-            log_error \
-                "Модуль ${module} не прошел проверку."
-
-            return 1
-
-        fi
-
-    fi
-
-
-
-    #
-    # Повторная установка
-    #
-
     if modules_is_installed "${module}"; then
 
         log_warn \
-            "Модуль ${module} уже установлен."
+            "Модуль уже установлен: ${module}"
 
         return 0
 
@@ -188,25 +164,6 @@ modules_install()
 
 
 
-    #
-    # Загрузка метаданных
-    #
-
-    if declare -f module_load_manifest >/dev/null 2>&1; then
-
-        module_load_manifest "${module}"
-
-        log_info \
-            "Версия модуля: ${MODULE_VERSION:-unknown}"
-
-    fi
-
-
-
-    #
-    # Запуск установки
-    #
-
     if [[ ! -x "${module_dir}/install.sh" ]]; then
 
         log_error \
@@ -218,14 +175,7 @@ modules_install()
 
 
 
-    if ! "${module_dir}/install.sh"; then
-
-        log_error \
-            "Ошибка установки модуля: ${module}"
-
-        return 1
-
-    fi
+    "${module_dir}/install.sh"
 
 
 
@@ -234,14 +184,14 @@ modules_install()
 
 
     log_success \
-        "Модуль ${module} установлен."
+        "Модуль установлен: ${module}"
 
 }
 
 
 
 #
-# Удаление
+# Remove
 #
 
 modules_remove()
@@ -254,7 +204,7 @@ modules_remove()
     if ! modules_exists "${module}"; then
 
         log_error \
-            "Модуль отсутствует: ${module}"
+            "Модуль не найден: ${module}"
 
         return 1
 
@@ -273,27 +223,30 @@ modules_remove()
         log_info \
             "Удаление модуля: ${module}"
 
-
         "${module_dir}/uninstall.sh"
+
+    else
+
+        log_warn \
+            "uninstall.sh отсутствует: ${module}"
 
     fi
 
 
 
-    rm -f \
-        "${LSM_MODULE_STATE_DIR}/${module}.installed"
+    modules_clear_state "${module}"
 
 
 
     log_success \
-        "Модуль ${module} удален."
+        "Модуль удален: ${module}"
 
 }
 
 
 
 #
-# Включение
+# Enable
 #
 
 modules_enable()
@@ -301,15 +254,15 @@ modules_enable()
 
     local module="$1"
 
-    local script
+    local module_dir
 
-    script="$(modules_path "${module}")/enable.sh"
+    module_dir="$(modules_path "${module}")"
 
 
 
-    if [[ -x "${script}" ]]; then
+    if [[ -x "${module_dir}/enable.sh" ]]; then
 
-        "${script}"
+        "${module_dir}/enable.sh"
 
     else
 
@@ -323,7 +276,7 @@ modules_enable()
 
 
 #
-# Отключение
+# Disable
 #
 
 modules_disable()
@@ -331,15 +284,15 @@ modules_disable()
 
     local module="$1"
 
-    local script
+    local module_dir
 
-    script="$(modules_path "${module}")/disable.sh"
+    module_dir="$(modules_path "${module}")"
 
 
 
-    if [[ -x "${script}" ]]; then
+    if [[ -x "${module_dir}/disable.sh" ]]; then
 
-        "${script}"
+        "${module_dir}/disable.sh"
 
     else
 
@@ -353,7 +306,7 @@ modules_disable()
 
 
 #
-# Статус
+# Status
 #
 
 modules_status()
@@ -365,30 +318,23 @@ modules_status()
 
     echo
 
+    echo "Модуль:"
+    echo "${module}"
+
 
 
     if modules_is_installed "${module}"; then
 
+        echo "Статус: установлен"
 
-        echo "Модуль: ${module}"
-
-        echo "Состояние: установлен"
-
-        echo
-
+        echo "Дата установки:"
 
         cat \
         "${LSM_MODULE_STATE_DIR}/${module}.installed"
 
-
-
     else
 
-
-        echo "Модуль: ${module}"
-
-        echo "Состояние: не установлен"
-
+        echo "Статус: не установлен"
 
     fi
 
@@ -401,7 +347,7 @@ modules_status()
 
 
 #
-# Список установленных
+# Installed list
 #
 
 modules_installed_list()
@@ -411,12 +357,9 @@ modules_installed_list()
 
 
 
-    {
-        find "${LSM_MODULE_STATE_DIR}" \
-            -name "*.installed" \
-            -printf "%f\n" \
-            2>/dev/null || true
-
-    } | sed 's/\.installed$//'
+    find "${LSM_MODULE_STATE_DIR}" \
+        -name "*.installed" \
+        -printf "%f\n" \
+        | sed 's/.installed$//'
 
 }
