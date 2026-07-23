@@ -1,15 +1,22 @@
 #!/usr/bin/env bash
-# shellcheck disable=SC2034
-#
+# ==============================================================================
 # Lite Server Monitor (LSM)
-# ANSI color definitions
-#
+# Определение ANSI-цветов для консольного вывода
+# Путь: lib/core/colors.sh
+# ==============================================================================
 
-# Disable colors if:
-# - stdout is not a terminal
-# - NO_COLOR environment variable is set
+# shellcheck disable=SC2034
+
+# Защита от повторного подключения файла
+[[ -n "${LSM_COLORS_LOADED:-}" ]] && return 0
+readonly LSM_COLORS_LOADED=1
+
+# Цвета отключаются, если:
+# - Вывод (stdout) направлен не в интерактивный терминал (например, в файл или перенаправлен)
+# - В системе установлена переменная окружения NO_COLOR
 if [[ ! -t 1 || -n "${NO_COLOR:-}" ]]; then
     readonly COLOR_RESET=""
+    readonly COLOR_BOLD=""
     readonly COLOR_RED=""
     readonly COLOR_GREEN=""
     readonly COLOR_YELLOW=""
@@ -17,7 +24,6 @@ if [[ ! -t 1 || -n "${NO_COLOR:-}" ]]; then
     readonly COLOR_MAGENTA=""
     readonly COLOR_CYAN=""
     readonly COLOR_WHITE=""
-    readonly COLOR_BOLD=""
 else
     readonly COLOR_RESET="\033[0m"
     readonly COLOR_BOLD="\033[1m"
