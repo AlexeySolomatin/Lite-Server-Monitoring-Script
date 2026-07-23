@@ -1,53 +1,68 @@
 #!/usr/bin/env bash
-#
-# -----------------------------------------------------------------------------
+# ==============================================================================
 # Lite Server Monitor (LSM)
-# Module Manager
-# -----------------------------------------------------------------------------
+# Библиотека управления модулями
+# Путь: lib/installer/modules.sh
+# ==============================================================================
 
-[[ -n "${LSM_MODULES_LOADED:-}" ]] && return
+set -Eeuo pipefail
+
+# Защита от повторного подключения файла
+[[ -n "${LSM_MODULES_LOADED:-}" ]] && return 0
 readonly LSM_MODULES_LOADED=1
 
-readonly LSM_MODULES_DIR="${LSM_ROOT}/modules"
+# Инициализация базовых путей
+LSM_ROOT="${LSM_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
+LSM_MODULES_DIR="${LSM_MODULES_DIR:-${LSM_ROOT}/modules}"
 
 #
-# Check module exists
+# Проверка существования модуля
 #
 modules_exists() {
+    local module="${1:-}"
 
-    local module="$1"
-
-    [[ -d "${LSM_MODULES_DIR}/${module}" ]]
-
+    [[ -n "${module}" && -d "${LSM_MODULES_DIR}/${module}" ]]
 }
 
 #
-# List available modules
+# Получение списка всех доступных модулей
 #
 modules_list() {
+    if [[ ! -d "${LSM_MODULES_DIR}" ]]; then
+        return 0
+    fi
 
-    find "${LSM_MODULES_DIR}" \
-        -mindepth 1 \
-        -maxdepth 1 \
-        -type d \
-        -printf "%f\n" \
-        | sort
-
+    # Защита конвейера pipefail при вызове find | sort
+    { find "${LSM_MODULES_DIR}" -mindepth 1 -maxdepth 1 -type d -printf "%f\n" 2>/dev/null || true; } | sort
 }
 
 #
-# Install module
+# Установка модуля
 #
 modules_install() {
+    local module="${1:-}"
 
-    local module="$1"
-
-    if ! modules_exists "${module}"; then
-        log_error "Unknown module: ${module}"
+    if [[ -z "${module}" ]]; then
+        if declare -f log_error >/dev/null 2>&1; then
+            log_error "MODULES" "Имя модуля не указано."
+        else
+            echo "Ошибка: Имя модуля не указано." >&2
+        fi
         return 1
     fi
 
-    log_info "Installing module: ${module}"
+    if ! modules_exists "${module}"; then
+        if declare -f log_error >/dev/null 2>&1; then
+            log_error "MODULES" "Неизвестный или отсутствующий модуль: ${module}"
+        else
+            echo "Ошибка: Неизвестный или отсутствующий модуль: ${module}" >&2
+        fi
+        return 1
+    fi
+
+    if declare -f log_info >/dev/null 2>&1; then
+        log_info "MODULES" "Установка модуля: ${module}"
+    fi
 
     local module_dir="${LSM_MODULES_DIR}/${module}"
 
@@ -59,50 +74,64 @@ modules_install() {
     if [[ -x "${module_dir}/install.sh" ]]; then
         "${module_dir}/install.sh"
     fi
-
 }
 
 #
-# Remove module
+# Удаление модуля
 #
 modules_remove() {
+    local module="${1:-}"
 
-    local module="$1"
+    if [[ -z "${module}" ]]; then
+        return 1
+    fi
 
     local module_dir="${LSM_MODULES_DIR}/${module}"
 
     if [[ -x "${module_dir}/uninstall.sh" ]]; then
+        if declare -f log_info >/dev/null 2>&1; then
+            log_info "MODULES" "Удаление модуля: ${module}"
+        fi
         "${module_dir}/uninstall.sh"
     fi
-
 }
 
 #
-# Enable module
+# Включение модуля
 #
 modules_enable() {
+    local module="${1:-}"
 
-    local module="$1"
+    if [[ -z "${module}" ]]; then
+        return 1
+    fi
 
     local module_dir="${LSM_MODULES_DIR}/${module}"
 
     if [[ -x "${module_dir}/enable.sh" ]]; then
+        if declare -f log_info >/dev/null 2>&1; then
+            log_info "MODULES" "Включение модуля: ${module}"
+        fi
         "${module_dir}/enable.sh"
     fi
-
 }
 
 #
-# Disable module
+# Отключение модуля
 #
 modules_disable() {
+    local module="${1:-}"
 
-    local module="$1"
+    if [[ -z "${module}" ]]; then
+        return 1
+    fi
 
     local module_dir="${LSM_MODULES_DIR}/${module}"
 
     if [[ -x "${module_dir}/disable.sh" ]]; then
+        if declare -f log_info >/dev/null 2>&1; then
+            log_info "MODULES" "Отключение модуля: ${module}"
+        fi
         "${module_dir}/disable.sh"
     fi
-
 }
