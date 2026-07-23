@@ -52,7 +52,9 @@ if [[ "${1:-}" == "--quiet" || "${1:-}" == "--non-interactive" || "${1:-}" == "-
     NON_INTERACTIVE=true
 fi
 
-if [[ "${NON_INTERACTIVE}" == "false" ]]; then
+registry_load_default
+
+if [[ "${NON_INTERACTIVE}" == "false" ]]; then    
     if [[ -f "${INSTALLER_DIR}/wizard.sh" ]]; then
         # shellcheck source=/dev/null
         source "${INSTALLER_DIR}/wizard.sh"
