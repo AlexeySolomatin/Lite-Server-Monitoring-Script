@@ -7,65 +7,101 @@
 
 set -Eeuo pipefail
 
-# Автоматическое определение корневой директории проекта
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-if [[ -z "${LSM_ROOT:-}" ]]; then
-    if [[ -d "${SCRIPT_DIR}/../commands" ]]; then
-        LSM_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
-    else
-        LSM_ROOT="/opt/lsm"
-    fi
-fi
+LSM_ROOT="/opt/lsm"
+
 export LSM_ROOT
 
-# Подключение базовых библиотек ядра
-if [[ -f "${LSM_ROOT}/lib/core/common.sh" ]]; then
-    # shellcheck source=/dev/null
-    source "${LSM_ROOT}/lib/core/common.sh"
-fi
 
-if [[ -f "${LSM_ROOT}/lib/core/ui.sh" ]]; then
-    # shellcheck source=/dev/null
-    source "${LSM_ROOT}/lib/core/ui.sh"
-fi
 
-# Извлечение команды и обработка стандартных флагов
 COMMAND="${1:-help}"
 
+shift || true
+
+
+
 case "${COMMAND}" in
-    -h|--help)
-        COMMAND="help"
-        ;;
-    -v|--version)
-        COMMAND="version"
-        ;;
+
+
+    help|-h|--help)
+
+        exec "${LSM_ROOT}/commands/help.sh"
+
+    ;;
+
+
+    modules)
+
+        exec "${LSM_ROOT}/commands/modules.sh" "$@"
+
+    ;;
+
+
+    install)
+
+        exec "${LSM_ROOT}/commands/install.sh" "$@"
+
+    ;;
+
+
+    uninstall)
+
+        exec "${LSM_ROOT}/commands/uninstall.sh" "$@"
+
+    ;;
+
+
+    update)
+
+        exec "${LSM_ROOT}/commands/update.sh" "$@"
+
+    ;;
+
+
+    status)
+
+        exec "${LSM_ROOT}/commands/status.sh" "$@"
+
+    ;;
+
+
+    doctor)
+
+        exec "${LSM_ROOT}/commands/doctor.sh" "$@"
+
+    ;;
+
+
+    report)
+
+        exec "${LSM_ROOT}/commands/report.sh" "$@"
+
+    ;;
+
+
+    config)
+
+        exec "${LSM_ROOT}/commands/config.sh" "$@"
+
+    ;;
+
+
+    version)
+
+        exec "${LSM_ROOT}/commands/version.sh" "$@"
+
+    ;;
+
+
+    *)
+
+        echo
+        echo "Неизвестная команда: ${COMMAND}"
+        echo
+
+        exec "${LSM_ROOT}/commands/help.sh"
+
+    ;;
+
+
 esac
-
-# Сдвигаем аргументы, передавая скрипту команды только его параметры
-if [[ $# -gt 0 ]]; then
-    shift
-fi
-
-COMMAND_SCRIPT="${LSM_ROOT}/commands/${COMMAND}.sh"
-
-# Маршрутизация выполнения команды
-if [[ -f "${COMMAND_SCRIPT}" ]]; then
-    exec bash "${COMMAND_SCRIPT}" "$@"
-else
-    if declare -f log_error >/dev/null 2>&1; then
-        log_error "CLI" "Неизвестная команда: '${COMMAND}'"
-    else
-        echo "Ошибка: Неизвестная команда '${COMMAND}'" >&2
-    fi
-    echo ""
-
-    HELP_SCRIPT="${LSM_ROOT}/commands/help.sh"
-    if [[ -f "${HELP_SCRIPT}" ]]; then
-        exec bash "${HELP_SCRIPT}"
-    else
-        echo "Использование: lsm <команда> [параметры]" >&2
-        echo "Запустите 'lsm help' для получения списка доступных команд." >&2
-        exit 1
-    fi
-fi
