@@ -1,41 +1,32 @@
-#
-# -----------------------------------------------------------------------------
+# ==============================================================================
 # Lite Server Monitor (LSM)
-# UPS Monitor Service
-# -----------------------------------------------------------------------------
+# Юнит службы мониторинга ИБП (UPS)
+# Путь: /etc/systemd/system/lsm-ups.service
+# ==============================================================================
 
 [Unit]
-
 Description=Lite Server Monitor - UPS Monitor
 Documentation=https://github.com/AlexeySolomatin/Lite-Server-Monitor
-
-After=apcupsd.service
-
-
+After=network.target apcupsd.service
+Wants=apcupsd.service
 
 [Service]
-
 Type=oneshot
-
-ExecStart=/opt/lsm/modules/ups/check_ups.sh
-
+ExecStart=/bin/bash /opt/lsm/modules/ups/check_ups.sh
 
 User=root
 Group=root
 
-
+# Настройки безопасности и изоляции
 NoNewPrivileges=true
-
 PrivateTmp=true
-
 ProtectSystem=strict
 ProtectHome=true
-
-
 ReadWritePaths=/var/lib/lsm /var/log/lsm
 
-
+# Вывод логов в journald
+StandardOutput=journal
+StandardError=journal
 
 [Install]
-
 WantedBy=multi-user.target
