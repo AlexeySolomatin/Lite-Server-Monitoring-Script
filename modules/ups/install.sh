@@ -1,26 +1,42 @@
 #!/usr/bin/env bash
-#
-# -----------------------------------------------------------------------------
+# ==============================================================================
 # Lite Server Monitor (LSM)
-# UPS Monitoring Module Installer
-# -----------------------------------------------------------------------------
+# Скрипт установки модуля мониторинга ИБП (UPS)
+# Путь: modules/ups/install.sh
+# ==============================================================================
 
 set -Eeuo pipefail
 
 MODULE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 LSM_ROOT="${LSM_ROOT:-/opt/lsm}"
 
-if [[ -f "${LSM_ROOT}/lib/core/common.sh" ]]; then source "${LSM_ROOT}/lib/core/common.sh"; fi
-if [[ -f "${LSM_ROOT}/lib/core/ui.sh" ]]; then source "${LSM_ROOT}/lib/core/ui.sh"; fi
-if [[ -f "${LSM_ROOT}/lib/installer/deploy.sh" ]]; then source "${LSM_ROOT}/lib/installer/deploy.sh"; fi
+# Подключение базовых библиотек и хелперов установки
+if [[ -f "${LSM_ROOT}/lib/core/common.sh" ]]; then
+    # shellcheck source=/dev/null
+    source "${LSM_ROOT}/lib/core/common.sh"
+fi
 
-log_info "Installing UPS monitoring module..."
+if [[ -f "${LSM_ROOT}/lib/core/ui.sh" ]]; then
+    # shellcheck source=/dev/null
+    source "${LSM_ROOT}/lib/core/ui.sh"
+fi
 
-# 1. Директории
+if [[ -f "${LSM_ROOT}/lib/installer/deploy.sh" ]]; then
+    # shellcheck source=/dev/null
+    source "${LSM_ROOT}/lib/installer/deploy.sh"
+fi
+
+if declare -f log_info >/dev/null 2>&1; then
+    log_info "INSTALL" "Установка модуля мониторинга ИБП (UPS)..."
+else
+    echo "Установка модуля мониторинга ИБП (UPS)..."
+fi
+
+# 1. Создание целевых директорий
 deploy_create_directory "${LSM_ROOT}/modules/ups" "755" "root" "root"
 deploy_create_directory "/etc/lsm/modules" "755" "root" "root"
 
-# 2. Исполняемый файл
+# 2. Установка исполняемого скрипта проверки
 if [[ -f "${MODULE_DIR}/files/check_ups.sh" ]]; then
     deploy_install_file \
         "${MODULE_DIR}/files/check_ups.sh" \
@@ -28,27 +44,45 @@ if [[ -f "${MODULE_DIR}/files/check_ups.sh" ]]; then
         "755" "root" "root"
 fi
 
-# 3. Systemd юниты
+# 3. Установка юнитов Systemd
 if [[ -f "${MODULE_DIR}/files/lsm-ups.service" ]]; then
-    deploy_install_file "${MODULE_DIR}/files/lsm-ups.service" "/etc/systemd/system/lsm-ups.service" "644" "root" "root"
-fi
-if [[ -f "${MODULE_DIR}/files/lsm-ups.timer" ]]; then
-    deploy_install_file "${MODULE_DIR}/files/lsm-ups.timer" "/etc/systemd/system/lsm-ups.timer" "644" "root" "root"
+    deploy_install_file \
+        "${MODULE_DIR}/files/lsm-ups.service" \
+        "/etc/systemd/system/lsm-ups.service" \
+        "644" "root" "root"
 fi
 
-# 4. Конфигурация
+if [[ -f "${MODULE_DIR}/files/lsm-ups.timer" ]]; then
+    deploy_install_file \
+        "${MODULE_DIR}/files/lsm-ups.timer" \
+        "/etc/systemd/system/lsm-ups.timer" \
+        "644" "root" "root"
+fi
+
+# 4. Установка конфигурационного файла (без перезаписи существующего)
 if [[ -f "${MODULE_DIR}/templates/ups.conf" ]]; then
     if [[ ! -f "/etc/lsm/modules/ups.conf" ]]; then
-        deploy_install_file "${MODULE_DIR}/templates/ups.conf" "/etc/lsm/modules/ups.conf" "640" "root" "root"
+        deploy_install_file \
+            "${MODULE_DIR}/templates/ups.conf" \
+            "/etc/lsm/modules/ups.conf" \
+            "640" "root" "root"
     else
-        log_warn "Configuration /etc/lsm/modules/ups.conf already exists, skipping overwrite."
+        if declare -f log_warn >/dev/null 2>&1; then
+            log_warn "INSTALL" "Конфигурационный файл /etc/lsm/modules/ups.conf уже существует, пропуск перезаписи."
+        else
+            echo "Предупреждение: Конфигурационный файл /etc/lsm/modules/ups.conf уже существует, пропуск перезаписи." >&2
+        fi
     fi
 fi
 
-# 5. Активация таймера
+# 5. Перезагрузка конфигурации systemd и активация таймера
 if command -v systemctl >/dev/null 2>&1; then
     systemctl daemon-reload || true
     systemctl enable --now lsm-ups.timer || true
 fi
 
-log_success "UPS monitoring module installed successfully."
+if declare -f log_success >/dev/null 2>&1; then
+    log_success "INSTALL" "Модуль мониторинга ИБП (UPS) успешно установлен."
+else
+    echo "Модуль мониторинга ИБП (UPS) успешно установлен."
+fi
