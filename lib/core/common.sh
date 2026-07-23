@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
-#
-# -----------------------------------------------------------------------------
+# ==============================================================================
 # Lite Server Monitor (LSM)
-# Core Common Variables & Base Environment
-# -----------------------------------------------------------------------------
+# Базовое окружение и общие системные переменные
+# Путь: lib/core/common.sh
+# ==============================================================================
 
 set -Eeuo pipefail
 
@@ -32,7 +32,7 @@ export LSM_LOG_DIR="${LSM_LOG_DIR:-/var/log/lsm}"
 export LSM_DATA_DIR="${LSM_DATA_DIR:-/var/lib/lsm}"
 
 #
-# Вспомогательные функции (System Helpers)
+# Вспомогательные функции (Системные хелперы)
 #
 
 # Проверка прав root (возвращает true/false)
@@ -44,9 +44,9 @@ is_root() {
 check_root() {
     if ! is_root; then
         if declare -f log_error >/dev/null 2>&1; then
-            log_error "This script must be run as root (or with sudo)."
+            log_error "Скрипт должен быть запущен с правами root (или через sudo)."
         else
-            echo "Error: This script must be run as root." >&2
+            echo "Ошибка: Скрипт должен быть запущен с правами root." >&2
         fi
         exit 1
     fi
@@ -78,3 +78,34 @@ is_supported_os() {
 has_internet() {
     ping -c 1 -W 2 1.1.1.1 >/dev/null 2>&1 || ping -c 1 -W 2 8.8.8.8 >/dev/null 2>&1
 }
+
+#
+# Загрузка конфигурационных файлов (/etc/lsm/*.conf)
+# Согласно Разделам 6 и 7 Архитектурного Контекста
+#
+load_lsm_configs() {
+    local config_files=(
+        "config.conf"
+        "modules.conf"
+        "notifications.conf"
+        "thresholds.conf"
+        "secrets.conf"
+    )
+
+    for cfg in "${config_files[@]}"; do
+        local cfg_path="${LSM_CONFIG_DIR}/${cfg}"
+        if [[ -f "${cfg_path}" ]]; then
+            # Обеспечиваем строго ограничение прав (0600) для файла секретов
+            if [[ "${cfg}" == "secrets.conf" ]]; then
+                chmod 600 "${cfg_path}" 2>/dev/null || true
+            fi
+            # shellcheck source=/dev/null
+            source "${cfg_path}"
+        fi
+    done
+}
+
+# Автоматическая подгрузка конфигов при их наличии
+if [[ -d "${LSM_CONFIG_DIR}" ]]; then
+    load_lsm_configs
+fi
