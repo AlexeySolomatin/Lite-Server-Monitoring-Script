@@ -1,32 +1,28 @@
-# UPS Monitor Module
+# Модуль мониторинга ИБП (UPS)
 
-## Description
+## Описание
 
-The UPS module monitors UPS status through apcupsd.
+Модуль UPS отслеживает состояние ИБП с помощью демона apcupsd.
 
-## Features
+## Возможности
 
-- Online/offline detection
-- Battery monitoring
-- Runtime monitoring
-- Low battery alerts
-- Recovery notifications
+- Детекция работы от сети / от батареи (Online/Offline)
+- Мониторинг уровня заряда батареи
+- Мониторинг остаточного времени работы
+- Оповещения о низком заряде батареи
+- Уведомления о восстановлении нормальной работы
 
-
-## Requirements
+## Требования
 
 - apcupsd
 
-
-## Configuration
+## Конфигурация
 
 ```
 /etc/lsm/modules/ups.conf
 ```
 
-
-## Installed Files
-
+## Устанавливаемые файлы
 ```
 /opt/lsm/modules/ups/check_ups.sh
 
@@ -37,6 +33,6 @@ The UPS module monitors UPS status through apcupsd.
 /etc/lsm/modules/ups.conf
 ```
 
-## Default Schedule
+## Расписание по умолчанию
 
-Every minute.
+Каждую минуту.
