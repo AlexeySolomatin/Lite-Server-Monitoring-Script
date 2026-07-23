@@ -3,55 +3,94 @@
 #
 # -----------------------------------------------------------------------------
 # Lite Server Monitor (LSM)
-# Module Selection Screen
+# Экран выбора модулей
+# Путь: installer/screens/modules.sh
 # -----------------------------------------------------------------------------
 
 set -Eeuo pipefail
 
+
 SELECTED_MODULES=()
 
+
+#
+# Выбор модулей через реестр
+#
 screen_modules() {
+
     wizard_header
 
+
     echo -e "${CLR_BOLD}Выбор модулей для установки:${CLR_RESET}"
-    echo "Ответьте на вопросы, чтобы сформировать состав системы мониторинга."
+    echo "Настройте состав системы мониторинга."
     echo
+
 
     SELECTED_MODULES=()
 
-    if wizard_yes_no "Установить мониторинг дискового пространства (Disk)?" "y"; then
-        SELECTED_MODULES+=("disk")
-    fi
 
-    if wizard_yes_no "Установить мониторинг системных ресурсов CPU/RAM (System)?" "y"; then
-        SELECTED_MODULES+=("system")
-    fi
+    while read -r module; do
 
-    if wizard_yes_no "Установить мониторинг состояния накопителей (SMART)?" "y"; then
-        SELECTED_MODULES+=("smart")
-    fi
 
-    if wizard_yes_no "Установить мониторинг RAID-массивов (RAID)?" "n"; then
-        SELECTED_MODULES+=("raid")
-    fi
+        [[ -z "${module}" ]] && continue
 
-    if wizard_yes_no "Установить мониторинг температуры компонентов (Temperature)?" "y"; then
-        SELECTED_MODULES+=("temperature")
-    fi
 
-    if wizard_yes_no "Установить мониторинг входов в систему (Login)?" "y"; then
-        SELECTED_MODULES+=("login")
-    fi
+        local description
+        local default
 
-    if wizard_yes_no "Установить мониторинг блокировок Fail2Ban?" "n"; then
-        SELECTED_MODULES+=("fail2ban")
-    fi
 
-    # Проверка: если пользователь ничего не выбрал, подключаем базовый модуль
+        description="$(registry_description "${module}")"
+        default="$(registry_default "${module}")"
+
+
+        # Служебный модуль ядра не выбирается вручную
+        if [[ "${module}" == "core" ]]; then
+            continue
+        fi
+
+
+        local answer="n"
+
+        if [[ "${default}" == "yes" ]]; then
+            answer="y"
+        fi
+
+
+        if wizard_yes_no \
+            "Установить модуль ${module}: ${description}?" \
+            "${answer}"
+        then
+
+            SELECTED_MODULES+=("${module}")
+
+        fi
+
+
+    done < <(registry_list | sort)
+
+
+
+    #
+    # Защита от пустой установки
+    #
     if [[ ${#SELECTED_MODULES[@]} -eq 0 ]]; then
+
+
         echo
-        echo -e "${CLR_YELLOW}Не выбрано ни одного модуля. По умолчанию подключен модуль 'system'.${CLR_RESET}"
-        SELECTED_MODULES+=("system")
+        echo -e "${CLR_YELLOW}Не выбран ни один модуль.${CLR_RESET}"
+
+
+        if registry_exists "system"; then
+
+            echo "Добавлен базовый модуль system."
+
+            SELECTED_MODULES+=("system")
+
+        fi
+
+
         wizard_pause
+
     fi
+
 }
