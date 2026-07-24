@@ -53,7 +53,8 @@ registry_add()
 
     if ! declare -f module_has_manifest >/dev/null 2>&1; then
 
-        log_error "API module_loader недоступен."
+        log_error \
+            "API module_loader недоступен."
 
         return 1
 
@@ -337,7 +338,9 @@ registry_resolve_module()
 
     local module="$1"
 
-    local -n output="$2"
+    local output_name="$2"
+
+    local -n output="${output_name}"
 
 
 
@@ -347,6 +350,17 @@ registry_resolve_module()
         [[ "${item}" == "${module}" ]] && return
 
     done
+
+
+
+    if ! registry_exists "${module}"; then
+
+        log_error \
+            "Модуль ${module} отсутствует в registry."
+
+        return 1
+
+    fi
 
 
 
@@ -361,7 +375,7 @@ registry_resolve_module()
 
         registry_resolve_module \
             "${dep}" \
-            output
+            "${output_name}"
 
     done
 
